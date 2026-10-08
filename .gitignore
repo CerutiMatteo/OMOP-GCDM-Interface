@@ -1,0 +1,9 @@
+# Credenziali e configurazioni riservate
+.streamlit/secrets.toml
+
+# File temporanei di Python
+__pycache__/
+*.pyc
+
+# Configurazioni locali di PyCharm
+.idea/
