@@ -97,5 +97,43 @@ for row in primary_key_columns:
 
 print("Numero di colonne PK trovate:", len(primary_key_columns))
 
+# RETRIEVE FOREIGN KEYS FROM POSTGRESQL
+cur.execute("""
+    SELECT
+        source_table.relname AS source_table,
+        source_column.attname AS source_column,
+        target_table.relname AS target_table,
+        target_column.attname AS target_column
+    FROM pg_catalog.pg_constraint AS fk
+    JOIN pg_catalog.pg_class AS source_table
+        ON fk.conrelid = source_table.oid
+    JOIN pg_catalog.pg_namespace AS source_schema
+        ON source_table.relnamespace = source_schema.oid
+    JOIN pg_catalog.pg_class AS target_table
+        ON fk.confrelid = target_table.oid
+    JOIN LATERAL unnest(fk.conkey, fk.confkey)
+        AS columns(source_attnum, target_attnum)
+        ON TRUE
+    JOIN pg_catalog.pg_attribute AS source_column
+        ON source_column.attrelid = source_table.oid
+       AND source_column.attnum = columns.source_attnum
+    JOIN pg_catalog.pg_attribute AS target_column
+        ON target_column.attrelid = target_table.oid
+       AND target_column.attnum = columns.target_attnum
+    WHERE source_schema.nspname = 'cdm'
+      AND fk.contype = 'f'
+    ORDER BY source_table.relname, fk.conname;
+""")
+
+foreign_keys = cur.fetchall()
+
+print("\nFOREIGN KEYS:")
+
+for row in foreign_keys:
+    print(f"{row[0]}.{row[1]} -> {row[2]}.{row[3]}")
+
+print("Numero di relazioni FK trovate:", len(foreign_keys))
+
+
 # Chiudiamo il cursore
 cur.close()
