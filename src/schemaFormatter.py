@@ -1,4 +1,4 @@
-from schemaMetadata import get_database_schema
+from .schemaMetadata import get_database_schema
 
 def format_schema_for_llm(schema, selected_tables=None):
     # Convert database metadata into a readable text representation

@@ -1,7 +1,7 @@
 import psycopg
 import streamlit as st
 
-from logicalRelationships import LOGICAL_RELATIONSHIPS
+from .logicalRelationships import LOGICAL_RELATIONSHIPS
 
 def get_database_schema():
     # RETRIVE DB CONF

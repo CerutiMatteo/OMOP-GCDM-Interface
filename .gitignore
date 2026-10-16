@@ -7,3 +7,6 @@ __pycache__/
 
 # Configurazioni locali di PyCharm
 .idea/
+
+# Persistent query history
+/data/query_history.json

@@ -1,11 +1,14 @@
 import streamlit as st
+import time
+
 from google import genai
+from google.genai import errors
 
-from schemaMetadata import get_database_schema
-from schemaFormatter import format_schema_for_llm
+from .schemaMetadata import get_database_schema
+from .schemaFormatter import format_schema_for_llm
 
 
-def generate_sql(question):
+def generate_sql(question, on_retry=None):
     # Retrieve the database schema.
     schema = get_database_schema()
 
@@ -49,11 +52,30 @@ def generate_sql(question):
         api_key=st.secrets["gemini"]["api_key"]
     )
 
-    # Generate SQL using Gemini.
-    response = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
-        contents=prompt
-    )
+    # Retry configuration for temporary API overload.
+    max_attempts = 4
+    retry_delays = [5, 10, 20]
+
+    for attempt in range(max_attempts):
+        try:
+            # Request SQL generation from Gemini.
+            response = client.models.generate_content(
+                model="gemini-3.5-flash-lite",
+                contents=prompt
+            )
+
+            # Stop retrying after a successful response.
+            break
+
+        except errors.ServerError as e:
+            # Retry only when Gemini is temporarily unavailable.
+            if e.code != 503 or attempt == max_attempts - 1:
+                raise
+            # Notify the interface before retrying.
+            if on_retry is not None:
+                on_retry(attempt + 1, retry_delays[attempt])
+            # Wait before trying again.
+            time.sleep(retry_delays[attempt])
 
     return response.text
 

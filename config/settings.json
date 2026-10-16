@@ -1,0 +1,14 @@
+{
+  "programmer_mode": true,
+  "max_rows": 100,
+  "automatic_retry": true,
+  "max_retries": 3,
+  "retry_delay_seconds": 10,
+  "allowed_tables": [
+    "person",
+    "specimen",
+    "variant_occurrence",
+    "target_gene",
+    "variant_annotation"
+  ]
+}
