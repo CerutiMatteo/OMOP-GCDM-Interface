@@ -30,7 +30,9 @@ def validate_config(config: dict) -> dict:
         "automatic_retry",
         "max_retries",
         "retry_delay_seconds",
-        "allowed_tables"
+        "allowed_tables",
+        "max_history",
+        "history_path"
     }
 
     if set(config) != required_keys:
@@ -77,14 +79,46 @@ def validate_config(config: dict) -> dict:
     if not set(tables).issubset(SUPPORTED_TABLES):
         raise ValueError("Configuration contains unsupported tables.")
 
+    # Validate maximum saved queries.
+    if type(config["max_history"]) is not int:
+        raise ValueError("Maximum saved queries must be an integer.")
+
+    if not 10 <= config["max_history"] <= 500:
+        raise ValueError("Maximum saved queries must be between 10 and 500.")
+
+    # Validate history save path.
+    if not isinstance(config["history_path"], str):
+        raise ValueError("History path must be a string.")
+
+    if not config["history_path"].strip():
+        raise ValueError("History path cannot be empty.")
+
+    history_path = Path(config["history_path"])
+
+    if history_path.is_absolute() or ".." in history_path.parts:
+        raise ValueError("History path must be relative to the project directory.")
+
+    if history_path.suffix.lower() != ".json":
+        raise ValueError("History path must point to a JSON file.")
+
+    # Restrict history files to the project's data directory.
+    resolved_path = (PROJECT_ROOT / history_path).resolve()
+    allowed_directory = (PROJECT_ROOT / "data").resolve()
+
+    if not resolved_path.is_relative_to(allowed_directory):
+        raise ValueError("History must be saved inside the data directory.")
+
     return config
 
 
 def load_config() -> dict:
-    """Load and validate the saved configuration."""
+    """Load configuration, adding defaults for new history settings."""
 
     with CONFIG_PATH.open("r", encoding="utf-8") as file:
         config = json.load(file)
+
+    config.setdefault("max_history", 100)
+    config.setdefault("history_path", "data/currentHistory.json")
 
     return validate_config(config)
 

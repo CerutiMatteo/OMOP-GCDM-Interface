@@ -1,6 +1,6 @@
 {
   "programmer_mode": true,
-  "max_rows": 100,
+  "max_rows": 10000,
   "automatic_retry": true,
   "max_retries": 3,
   "retry_delay_seconds": 10,
@@ -10,5 +10,7 @@
     "variant_occurrence",
     "target_gene",
     "variant_annotation"
-  ]
+  ],
+  "max_history": 100,
+  "history_path": "data/currentHistory.json"
 }

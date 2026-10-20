@@ -83,14 +83,10 @@ def validate_sql(sql: str) -> str:
     # Check every referenced table.
     for table in tables:
         if table.catalog or table.db != "cdm":
-            raise ValueError(
-                "Only tables in the cdm schema are allowed."
-            )
+            raise ValueError("Only tables in the cdm schema are allowed.")
 
         if table.name.lower() not in ALLOWED_TABLES:
-            raise ValueError(
-                f"Table '{table.name}' is not authorized."
-            )
+            raise ValueError(f"Table '{table.name}' does not exist or is not authorized.")
 
     # Reject locking clauses.
     if statement.args.get("locks"):
