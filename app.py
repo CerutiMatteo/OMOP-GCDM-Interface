@@ -3,20 +3,39 @@ import psycopg
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
+import json
+import streamlit.components.v1 as components
 
 from src.sqlExecutor import execute_sql
 from src.textToSQL import generate_sql
 from src.configManager import load_config, save_config
 from src.historyManager import load_history, save_history, export_history, import_history
+from src.configManager import SUPPORTED_TABLES
 
 #INITIALIZATION
 
 # Configure the Streamlit page.
-st.set_page_config(
-    page_title="OMOP G-CDM Interface",
-    page_icon="🧬",
-    layout="wide"
-)
+st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide")
+
+# Customize the hover colors of the Query History buttons.
+st.markdown("""
+<style>
+    /* Clear - Red */
+    .st-key-clear_query_history button:hover {
+        color: #FF4B4B !important;
+    }
+
+    /* Save - Green */
+    .st-key-save_query_history button:hover {
+        color: #00A86B !important;
+    }
+
+    /* Load - Blue */
+    .st-key-load_query_history button:hover {
+        color: #2196F3 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Load the saved application configuration.
 if "config" not in st.session_state:
@@ -40,10 +59,7 @@ if "collapse_history" not in st.session_state:
 with st.sidebar:
     st.title("📋 OMOP G-CDM")
 
-    page = st.radio(
-        "Menu:",
-        ["🔍 Interrogazione", "⚙️ Impostazioni", "🛠️ Diagnostica"]
-    )
+    page = st.radio( "Menu:", ["🔍 Interrogazione", "⚙️ Impostazioni", "🛠️ Diagnostica"])
 
 # Read the PostgreSQL connection settings from Streamlit secrets.
 db_config = st.secrets["connections"]["omop"]
@@ -68,30 +84,20 @@ if page == "🔍 Interrogazione":
     st.title("🧬 OMOP G-CDM Interface")
     st.write("Natural language interface for querying the OMOP G-CDM database.")
 
+    st.markdown('<div id="new-question"></div>', unsafe_allow_html=True)
+
     st.subheader("Question & SQL Generation")
 
     # Create a new input field after each completed query.
     st.write("Enter a question about clinical and genomic data:")
 
-    col_input, col_button = st.columns(
-        [5, 1],
-        gap="small",
-        vertical_alignment="bottom"
-    )
+    col_input, col_button = st.columns([5, 1], gap="small", vertical_alignment="bottom")
 
     with col_input:
-        question = st.text_input(
-            "Question",
-            key=f"question_input_{st.session_state['question_number']}",
-            label_visibility="collapsed"
-        )
+        question = st.text_input("Question", key=f"question_input_{st.session_state['question_number']}", label_visibility="collapsed")
 
     with col_button:
-        generate_clicked = st.button(
-            "Generate Query",
-            icon=":material/send:",
-            use_container_width=True
-        )
+        generate_clicked = st.button("Generate Query", icon=":material/send:", use_container_width=True)
 
     if generate_clicked:
 
@@ -107,21 +113,12 @@ if page == "🔍 Interrogazione":
 
             # Update the interface when Gemini is overloaded.
             def show_retry(attempt, delay):
-                retry_message.warning(
-                    "The AI model used to generate SQL query queries is currently "
-                    "experiencing high demand. Query generation may take "
-                    "longer than usual. "
-                    f"Retrying automatically..."
-                )
-
+                retry_message.warning("The AI model used to generate SQL query queries is currently experiencing high demand. Query generation may take longer than usual." f"Retrying automatically...")
 
             with st.spinner("Generating SQL query..."):
                 try:
                     # Generate SQL query using Gemini with automatic retries.
-                    sql = generate_sql(
-                        question,
-                        on_retry=show_retry
-                    )
+                    sql = generate_sql(question, on_retry=show_retry)
 
                     # Clear the overload message after success.
                     retry_message.empty()
@@ -149,18 +146,10 @@ if page == "🔍 Interrogazione":
                                 with st.spinner("Executing SQL query..."):
                                     # Open the read-only PostgreSQL connection.
                                     with connect_db() as conn:
-                                        df = execute_sql(
-                                            sql,
-                                            conn,
-                                            max_rows=st.session_state.get("max_rows", 1000)
-                                        )
+                                        df = execute_sql(sql, conn, max_rows=st.session_state.get("max_rows", 1000))
 
                                     # Save the query and its results to the history.
-                                    st.session_state["query_history"].append({
-                                        "question": question,
-                                        "sql": sql,
-                                        "results": df.copy()
-                                    })
+                                    st.session_state["query_history"].append({"question": question, "sql": sql, "results": df.copy()})
 
                                     # Persist the updated query history.
                                     save_history(st.session_state["query_history"])
@@ -171,9 +160,7 @@ if page == "🔍 Interrogazione":
 
                                     # Expand the latest result.
                                     st.session_state["collapse_history"] = False
-                                    st.session_state["history_version"] = (
-                                            st.session_state.get("history_version", 0) + 1
-                                    )
+                                    st.session_state["history_version"] = (st.session_state.get("history_version", 0) + 1)
 
                                     # Prepare a new empty question input.
                                     st.session_state["question_number"] += 1
@@ -196,11 +183,7 @@ if page == "🔍 Interrogazione":
                             or "resource_exhausted" in error_message
                             or "429" in error_message
                     ):
-                        st.warning(
-                            "The AI model used to convert natural language into SQL "
-                            "is currently experiencing high demand. "
-                            "Please wait a moment and try again."
-                        )
+                        st.warning("The AI model used to convert natural language into SQL is currently experiencing high demand. Please wait a moment and try again.")
                     else:
                         st.error("An unexpected error occurred while generating the SQL query. Please try again later.")
 
@@ -208,26 +191,13 @@ if page == "🔍 Interrogazione":
             st.warning("Please enter a question.")
 
     # Display editable SQL only when developer mode is enabled.
-    if (
-            st.session_state.get("developer_mode", False)
-            and "generated_sql" in st.session_state
-    ):
+    if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):
         st.subheader("Generated SQL")
-
-        st.text_area(
-            "SQL Query",
-            key="editable_sql",
-            height=250,
-            label_visibility="collapsed",
-            help="Review and modify the generated SQL before execution."
-        )
-
+        st.text_area("SQL Query", key="editable_sql", height=250, label_visibility="collapsed", help="Review and modify the generated SQL before execution.")
 
     # Execute the SQL query generated by Gemini.
     if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):
-
         if st.button("Run Query", key="run_generated_query"):
-
             try:
                 with st.spinner("Executing SQL query..."):
 
@@ -241,11 +211,7 @@ if page == "🔍 Interrogazione":
                     # Open the read-only PostgreSQL connection.
                     with connect_db() as conn:
                         # Validate and execute the generated query.
-                        df = execute_sql(
-                            sql,
-                            conn,
-                            max_rows=st.session_state.get("max_rows", 1000)
-                        )
+                        df = execute_sql(sql, conn, max_rows=st.session_state.get("max_rows", 1000))
 
                     # Save the completed query only once.
                     st.session_state["query_history"].append({
@@ -279,27 +245,16 @@ if page == "🔍 Interrogazione":
     @st.dialog("Clear Query History")
     def confirm_clear_history():
 
-        st.warning(
-            "Are you sure you want to delete your entire query history? "
-            "This action cannot be undone."
-        )
+        st.warning("Are you sure you want to delete your entire query history? This action cannot be undone.")
 
         col_cancel, col_confirm = st.columns(2)
 
         with col_cancel:
-            if st.button(
-                    "Cancel",
-                    use_container_width=True
-            ):
+            if st.button("Cancel", use_container_width=True):
                 st.rerun()
 
         with col_confirm:
-            if st.button(
-                    "Delete History",
-                    icon=":material/delete_outline:",
-                    type="primary",
-                    use_container_width=True
-            ):
+            if st.button("Delete History", icon=":material/delete_outline:", type="primary", use_container_width=True):
                 # Clear persistent history.
                 save_history([])
 
@@ -315,9 +270,7 @@ if page == "🔍 Interrogazione":
 
                 # Reset history display.
                 st.session_state["collapse_history"] = True
-                st.session_state["history_version"] = (
-                        st.session_state.get("history_version", 0) + 1
-                )
+                st.session_state["history_version"] = (st.session_state.get("history_version", 0) + 1)
 
                 st.rerun()
 
@@ -326,114 +279,56 @@ if page == "🔍 Interrogazione":
 
         config = st.session_state["config"]
 
-        # Generate a default name when opening the dialog.
-        default_filename = datetime.now().strftime(
-            "history%Y%m%d%H%M%S.json"
-        )
+        # Generate a default filename.
+        default_filename = datetime.now().strftime("history%Y%m%d%H%M%S.json")
 
-        # Use the directory configured in History Settings.
-        default_directory = str(
-            Path(config["history_path"]).parent
-        )
+        # Get the directory configured in History Settings.
+        save_directory = Path(config["history_path"]).parent
 
-        st.write(
-            "Save a copy of the current query history, "
-            "including questions, generated SQL queries and results."
-        )
+        # Display information about the export.
+        st.write("Save a copy of the current query history, including questions, generated SQL queries and results.")
 
-        filename = st.text_input(
-            "File Name",
-            value=default_filename,
-            key="history_export_filename"
-        )
+        # Allow the user to customize the filename.
+        filename = st.text_input("File Name", value=default_filename, key="history_export_filename")
 
-        directory = st.text_input(
-            "Save Directory",
-            value=default_directory,
-            key="history_export_directory",
-            help="Choose a directory inside the project's data folder."
-        )
+        # Display the fixed destination directory.
+        st.info(f"📁 The file will be saved in: **{save_directory}**")
 
         col_cancel, col_save = st.columns(2)
 
         with col_cancel:
-            if st.button(
-                    "Cancel",
-                    key="cancel_history_export",
-                    use_container_width=True
-            ):
+            if st.button("Cancel", key="cancel_history_export", use_container_width=True):
                 st.rerun()
 
         with col_save:
-            if st.button(
-                    "Save History",
-                    icon=":material/save:",
-                    key="confirm_history_export",
-                    type="primary",
-                    use_container_width=True
-            ):
+            if st.button("Save History", icon=":material/save:", key="confirm_history_export", type="primary", use_container_width=True):
                 try:
-                    destination = export_history(
-                        st.session_state["query_history"],
-                        filename,
-                        directory
-                    )
-
-                    st.session_state["history_export_success"] = (
-                        f"History saved successfully to: {destination}"
-                    )
-
+                    destination = export_history(st.session_state["query_history"], filename, str(save_directory))
+                    st.session_state["history_export_success"] = (f"History saved successfully to: {destination}")
                     st.rerun()
-
                 except (ValueError, OSError) as e:
                     st.error(str(e))
 
 
     @st.dialog("Load Query History")
     def confirm_load_history():
-
-        st.write(
-            "Select a previously saved history file to restore "
-            "questions, generated SQL queries and results."
-        )
-
-        uploaded_file = st.file_uploader(
-            "Select History File",
-            type=["json"],
-            key="history_import_file"
-        )
-
+        st.write("Select a previously saved history file to restorequestions, generated SQL queries and results.")
+        uploaded_file = st.file_uploader("Select History File", type=["json"], key="history_import_file")
         col_cancel, col_load = st.columns(2)
-
+        
         with col_cancel:
-            if st.button(
-                    "Cancel",
-                    key="cancel_history_import",
-                    use_container_width=True
-            ):
+            if st.button("Cancel", key="cancel_history_import", use_container_width=True):
                 st.rerun()
 
         with col_load:
-            if st.button(
-                    "Load History",
-                    icon=":material/folder_open:",
-                    key="confirm_history_import",
-                    type="secondary",
-                    disabled=uploaded_file is None,
-                    use_container_width=True
-            ):
+            if st.button("Load History", icon=":material/folder_open:", key="confirm_history_import", type="primary", disabled=uploaded_file is None, use_container_width=True            ):
                 try:
-                    imported_history = import_history(
-                        uploaded_file.getvalue()
-                    )
-
+                    
+                    imported_history = import_history(uploaded_file.getvalue())
                     max_history = st.session_state["config"]["max_history"]
-
+                    
                     if len(imported_history) > max_history:
-                        st.warning(
-                            f"The file contains {len(imported_history)} queries. "
-                            f"Only the most recent {max_history} will be restored."
-                        )
+                        st.warning(f"The file contains {len(imported_history)} queries. " f"Only the most recent {max_history} will be restored.")
 
                     restored_history = imported_history[-max_history:]
 
@@ -449,13 +344,9 @@ if page == "🔍 Interrogazione":
 
                     # Keep expanders closed after importing.
                     st.session_state["collapse_history"] = True
-                    st.session_state["history_version"] = (
-                            st.session_state.get("history_version", 0) + 1
-                    )
+                    st.session_state["history_version"] = (st.session_state.get("history_version", 0) + 1)
 
-                    st.session_state["history_import_success"] = (
-                        f"Successfully loaded {len(restored_history)} queries."
-                    )
+                    st.session_state["history_import_success"] = (f"Successfully loaded {len(restored_history)} queries.")
 
                     st.rerun()
 
@@ -474,29 +365,14 @@ if page == "🔍 Interrogazione":
     if st.session_state["query_history"]:
 
         # Clear and Save buttons.
-        col_clear, col_save, col_space = st.columns(
-            [1, 1, 6],
-            gap="small"
-        )
+        col_clear, col_save, col_space = st.columns([1, 1, 6], gap="small")
 
         with col_clear:
-            if st.button(
-                    "Clear",
-                    icon=":material/delete_outline:",
-                    type="tertiary",
-                    key="clear_query_history",
-                    use_container_width=True
-            ):
+            if st.button("Clear", icon=":material/delete_outline:", type="tertiary", key="clear_query_history", use_container_width=True):
                 confirm_clear_history()
 
         with col_save:
-            if st.button(
-                    "Save",
-                    icon=":material/save:",
-                    type="tertiary",
-                    key="save_query_history",
-                    use_container_width=True
-            ):
+            if st.button("Save", icon=":material/save:", type="tertiary", key="save_query_history", use_container_width=True):
                 confirm_save_history()
 
         for index, item in enumerate(st.session_state["query_history"]):
@@ -524,22 +400,68 @@ if page == "🔍 Interrogazione":
 
                 df = item["results"]
 
-                st.dataframe(
-                    df,
-                    width="stretch",
-                    hide_index=True
-                )
+                st.dataframe(df, width="stretch", hide_index=True)
 
                 st.write(f"Total rows: {len(df)}")
 
                 # Allow the user to download the results.
-                st.download_button(
-                    label="Download CSV",
-                    data=df.to_csv(index=False).encode("utf-8-sig"),
-                    file_name=f"query_results_{index + 1}.csv",
-                    mime="text/csv",
-                    key=f"download_history_{index}"
-                )
+                st.download_button(label="Download CSV", data=df.to_csv(index=False).encode("utf-8-sig"), file_name=f"query_results_{index + 1}.csv", mime="text/csv", key=f"download_history_{index}")
+
+        # Return to the question input and automatically focus the text field
+        components.html(
+            """
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: transparent;
+                    font-family: "Source Sans Pro", sans-serif;
+                }
+
+                .new-question-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.5rem 0.75rem;
+                background-color: #262730;
+                color: white;
+                border: 1px solid #262730;
+                border-radius: 0.5rem;
+                font-size: 0.875rem;
+                font-weight: 400;
+                cursor: pointer;
+                transition: background-color 0.2s, border-color 0.2s;
+            }
+
+            .new-question-button:hover {
+                background-color: #363945;
+                border-color: #363945;
+                color: white;
+            }
+            </style>
+
+            <button class="new-question-button" onclick="focusQuestion()">
+                New Question
+            </button>
+
+            <script>
+                function focusQuestion() {
+                    const input = window.parent.document.querySelector(
+                        '[class*="st-key-question_input_"] input'
+                    );
+
+                    if (input) {
+                        input.focus();
+                        input.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center"
+                        });
+                    }
+                }
+            </script>
+            """,
+            height=45
+        )
 
     else:
 
@@ -547,13 +469,7 @@ if page == "🔍 Interrogazione":
         col_load, col_space = st.columns([1, 7], gap="small")
 
         with col_load:
-            if st.button(
-                    "Load",
-                    icon=":material/folder_open:",
-                    type="secondary",
-                    key="load_query_history",
-                    use_container_width=True
-            ):
+            if st.button("Load", icon=":material/folder_open:", type="tertiary", key="load_query_history", use_container_width=True):
                 confirm_load_history()
 
 
@@ -565,10 +481,7 @@ elif page == "⚙️ Impostazioni":
 
     st.title("⚙️ Settings")
 
-    st.write(
-        "Configure application behavior, SQL generation, "
-        "query results, and database access."
-    )
+    st.write("Configure application behavior, SQL generation, query results, and database access.")
 
     # Save a validated configuration update.
     def update_setting(name, value):
@@ -606,21 +519,7 @@ elif page == "⚙️ Impostazioni":
         value = st.session_state["max_history_input"]
 
         if update_setting("max_history", value):
-            st.session_state["query_history"] = (
-                st.session_state["query_history"][-value:]
-            )
-            save_history(st.session_state["query_history"])
-
-    # save path of saved history
-    def save_history_path():
-        new_path = st.session_state["history_path_input"]
-        old_path = st.session_state["config"]["history_path"]
-
-        if new_path == old_path:
-            return
-
-        if update_setting("history_path", new_path):
-            # Preserve the current history in the new location.
+            st.session_state["query_history"] = (st.session_state["query_history"][-value:])
             save_history(st.session_state["query_history"])
 
     # Save Automatic Retry.
@@ -654,129 +553,37 @@ elif page == "⚙️ Impostazioni":
 
 
     # PROGRAMMER SETTINGS
-
     st.subheader("Programmer Settings")
-
-    st.toggle(
-        "Programmer Mode",
-        value=st.session_state["config"]["programmer_mode"],
-        key="programmer_mode_input",
-        on_change=save_programmer_mode,
-        help="Show generated SQL queries and technical details."
-    )
-
+    st.toggle("Programmer Mode", value=st.session_state["config"]["programmer_mode"], key="programmer_mode_input", on_change=save_programmer_mode, help="Show generated SQL queries and technical details.")
     st.divider()
 
 
     # QUERY RESULTS SETTINGS
-
     st.subheader("Query Results Settings")
-
-    st.number_input(
-        "Maximum Number of Rows",
-        min_value=1,
-        max_value=10000,
-        step=1,
-        value=st.session_state["config"]["max_rows"],
-        key="max_rows_input",
-        on_change=save_max_rows,
-        help="Maximum number of rows returned by a database query."
-    )
-
+    st.number_input("Maximum Number of Rows", min_value=1, max_value=10000, step=1, value=st.session_state["config"]["max_rows"], key="max_rows_input", on_change=save_max_rows, help="Maximum number of rows returned by a database query.")
     st.divider()
 
 
     # HISTORY SETTINGS
-
     st.subheader("History Settings")
-
-    st.number_input(
-        "Maximum Saved Queries",
-        min_value=10,
-        max_value=500,
-        step=10,
-        value=st.session_state["config"]["max_history"],
-        key="max_history_input",
-        on_change=save_max_history,
-        help="Maximum number of queries stored in history."
-    )
-
-    st.text_input(
-        "History Save Path",
-        value=st.session_state["config"]["history_path"],
-        key="history_path_input",
-        on_change=save_history_path,
-        help="JSON file path relative to the project directory."
-    )
-
+    st.number_input("Maximum Saved Queries", min_value=10, max_value=500, step=10, value=st.session_state["config"]["max_history"], key="max_history_input", on_change=save_max_history, help="Maximum number of queries stored in history.")
     st.divider()
 
 
     # SQL GENERATION SETTINGS
-
     st.subheader("SQL Generation Settings")
-
-    st.toggle(
-        "Automatic Retry",
-        value=st.session_state["config"]["automatic_retry"],
-        key="automatic_retry_input",
-        on_change=save_automatic_retry,
-        help="Automatically retry SQL generation after temporary errors."
-    )
-
-    st.number_input(
-        "Maximum Retries",
-        min_value=1,
-        max_value=10,
-        step=1,
-        value=st.session_state["config"]["max_retries"],
-        key="max_retries_input",
-        on_change=save_max_retries,
-        disabled=not st.session_state["config"]["automatic_retry"],
-        help="Number of additional attempts after the initial request."
-    )
-
-    st.number_input(
-        "Retry Delay (seconds)",
-        min_value=1,
-        max_value=60,
-        step=1,
-        value=st.session_state["config"]["retry_delay_seconds"],
-        key="retry_delay_input",
-        on_change=save_retry_delay,
-        disabled=not st.session_state["config"]["automatic_retry"],
-        help="Fixed waiting time between retry attempts."
-    )
-
+    st.toggle("Automatic Retry", value=st.session_state["config"]["automatic_retry"], key="automatic_retry_input", on_change=save_automatic_retry, help="Automatically retry SQL generation after temporary errors.")
+    st.number_input("Maximum Retries", min_value=1, max_value=10, step=1, value=st.session_state["config"]["max_retries"], key="max_retries_input", on_change=save_max_retries, disabled=not st.session_state["config"]["automatic_retry"], help="Number of additional attempts after the initial request.")
+    st.number_input("Retry Delay (seconds)", min_value=1, max_value=60, step=1, value=st.session_state["config"]["retry_delay_seconds"], key="retry_delay_input", on_change=save_retry_delay, disabled=not st.session_state["config"]["automatic_retry"], help="Fixed waiting time between retry attempts.")
     st.divider()
 
 
     # DATABASE ACCESS SETTINGS
-
     st.subheader("Database Access Settings")
-
-    st.write(
-        "Select which database tables can be used "
-        "when generating and executing SQL queries."
-    )
-
-    from src.configManager import SUPPORTED_TABLES
-
-    st.multiselect(
-        "Allowed Tables",
-        options=sorted(SUPPORTED_TABLES),
-        default=st.session_state["config"]["allowed_tables"],
-        key="allowed_tables_input",
-        on_change=save_allowed_tables,
-        help="At least one table must remain selected."
-    )
-
+    st.write("Select which database tables can be used when generating and executing SQL queries.")
+    st.multiselect("Allowed Tables", options=sorted(SUPPORTED_TABLES), default=st.session_state["config"]["allowed_tables"], key="allowed_tables_input", on_change=save_allowed_tables, help="At least one table must remain selected.")
     st.divider()
-
-    st.caption(
-        "Settings are saved automatically to config/settings.json."
-    )
-
+    st.caption("Settings are saved automatically to config/settings.json.")
 
 
 ##############################################################################################
@@ -790,36 +597,25 @@ elif page == "🛠️ Diagnostica":
 
     # Test the PostgreSQL connection.
     st.subheader("Database Connection")
-
     if st.button("Test Database Connection"):
-
         try:
             # Open a read-only PostgreSQL connection.
             with connect_db() as conn:
                 with conn.cursor() as cur:
                     cur.execute("SELECT COUNT(*) FROM cdm.person;")
                     patient_count = cur.fetchone()[0]
-
             st.success("Database connection successful!")
             st.write(f"Total patients: {patient_count}")
-
         except psycopg.Error as e:
             st.error("Database connection failed.")
             st.error(str(e))
-
     st.divider()
-
 
     # Test the execution of a predefined SQL query.
     st.subheader("SQL Execution Test")
-
-    st.write(
-        "Execute a predefined SQL query to verify "
-        "that PostgreSQL returns the expected results."
-    )
+    st.write("Execute a predefined SQL query to verify that PostgreSQL returns the expected results.")
 
     if st.button("Run SQL Test"):
-
         try:
             # Open a read-only PostgreSQL connection.
             with connect_db() as conn:
@@ -830,11 +626,9 @@ elif page == "🛠️ Diagnostica":
                         FROM cdm.person
                         LIMIT 100;
                     """)
-
                     # Retrieve column names and query results.
                     columns = [column.name for column in cur.description]
                     rows = cur.fetchall()
-
             # Convert query results into a DataFrame.
             df = pd.DataFrame(rows, columns=columns)
 
@@ -849,12 +643,7 @@ elif page == "🛠️ Diagnostica":
             # Convert the DataFrame into a downloadable CSV file.
             csv_data = df.to_csv(index=False).encode("utf-8")
 
-            st.download_button(
-                label="Download CSV",
-                data=csv_data,
-                file_name="query_results.csv",
-                mime="text/csv"
-            )
+            st.download_button(label="Download CSV", data=csv_data, file_name="query_results.csv", mime="text/csv")
 
         except psycopg.Error as e:
             st.error("SQL query execution failed.")
@@ -950,4 +739,3 @@ elif page == "🛠️ Diagnostica":
 
         except Exception as e:
             st.error(f"Permission check failed: {e}")
-
