@@ -1,56 +1,65 @@
-
 import sqlglot
 from sqlglot import exp
+from sqlglot.expressions import Subquery as SubqueryExpression
+
+from .configManager import load_config
 
 
-# Tables authorized for SQL execution.
-ALLOWED_TABLES = {
-    "person",
-    "specimen",
-    "variant_occurrence",
-    "target_gene",
-    "variant_annotation",
-}
-
-# SQL expression types allowed in the first execution version.
+# SQL expression types allowed for read-only queries.
 ALLOWED_EXPRESSIONS = (
     exp.Select,
+    exp.Union,
+    exp.Distinct,
+    SubqueryExpression,
+
     exp.From,
     exp.Table,
     exp.Column,
     exp.Identifier,
     exp.Star,
     exp.Alias,
+    exp.TableAlias,
     exp.Join,
     exp.Where,
     exp.Order,
     exp.Ordered,
     exp.Limit,
+
     exp.Literal,
     exp.Boolean,
     exp.Null,
+
     exp.And,
     exp.Or,
     exp.Not,
+
     exp.EQ,
     exp.NEQ,
     exp.GT,
     exp.GTE,
     exp.LT,
     exp.LTE,
+
     exp.Is,
     exp.In,
     exp.Between,
     exp.Like,
+    exp.ILike,
+
     exp.Paren,
+
     exp.Add,
     exp.Sub,
     exp.Mul,
     exp.Div,
 )
 
-
 def validate_sql(sql: str) -> str:
+
+    # Retrieve authorized tables.
+    config = load_config()
+    allowed_tables = set(config["allowed_tables"])
+
     # Parse SQL using PostgreSQL syntax.
     try:
         statements = sqlglot.parse(sql, read="postgres")
@@ -63,12 +72,13 @@ def validate_sql(sql: str) -> str:
 
     statement = statements[0]
 
-    # Accept only SELECT statements.
-    if not isinstance(statement, exp.Select):
+    # Accept SELECT queries and UNION combinations of SELECT queries.
+    if not isinstance(statement, (exp.Select, exp.Union)):
         raise ValueError("Only SELECT queries are allowed.")
 
-    # Reject any SQL expression not explicitly supported.
+    # Validate every expression in the syntax tree.
     for node in statement.walk():
+
         if not isinstance(node, ALLOWED_EXPRESSIONS):
             raise ValueError(
                 f"Unsupported SQL expression: {type(node).__name__}"
@@ -80,16 +90,22 @@ def validate_sql(sql: str) -> str:
     if not tables:
         raise ValueError("The query must reference a table.")
 
-    # Check every referenced table.
+    # Validate EVERY referenced table.
     for table in tables:
+
         if table.catalog or table.db != "cdm":
-            raise ValueError("Only tables in the cdm schema are allowed.")
+            raise ValueError(
+                "Only tables in the cdm schema are allowed."
+            )
 
-        if table.name.lower() not in ALLOWED_TABLES:
-            raise ValueError(f"Table '{table.name}' does not exist or is not authorized.")
+        if table.name.lower() not in allowed_tables:
+            raise ValueError(
+                f"Table '{table.name}' does not exist or is not authorized."
+            )
 
-    # Reject locking clauses.
-    if statement.args.get("locks"):
-        raise ValueError("Locking clauses are not allowed.")
+    # Reject locking clauses, including nested SELECT queries.
+    for select in statement.find_all(exp.Select):
+        if select.args.get("locks"):
+            raise ValueError("Locking clauses are not allowed.")
 
     return statement.sql(dialect="postgres")

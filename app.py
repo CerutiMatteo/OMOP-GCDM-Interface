@@ -10,7 +10,7 @@ from src.sqlExecutor import execute_sql
 from src.textToSQL import generate_sql
 from src.configManager import load_config, save_config
 from src.historyManager import load_history, save_history, export_history, import_history
-from src.configManager import SUPPORTED_TABLES
+from src.configManager import get_supported_tables
 
 #INITIALIZATION
 
@@ -581,7 +581,14 @@ elif page == "⚙️ Impostazioni":
     # DATABASE ACCESS SETTINGS
     st.subheader("Database Access Settings")
     st.write("Select which database tables can be used when generating and executing SQL queries.")
-    st.multiselect("Allowed Tables", options=sorted(SUPPORTED_TABLES), default=st.session_state["config"]["allowed_tables"], key="allowed_tables_input", on_change=save_allowed_tables, help="At least one table must remain selected.")
+    st.multiselect(
+        "Allowed Tables",
+        options=sorted(get_supported_tables()),
+        default=st.session_state["config"]["allowed_tables"],
+        key="allowed_tables_input",
+        on_change=save_allowed_tables,
+        help="Select which database tables can be used for SQL queries."
+    )
     st.divider()
     st.caption("Settings are saved automatically to config/settings.json.")
 

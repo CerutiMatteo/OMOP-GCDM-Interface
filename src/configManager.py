@@ -3,20 +3,18 @@ import os
 import tempfile
 from pathlib import Path
 
+from functools import lru_cache
+from .schemaMetadata import get_database_schema
 
 # Resolve the configuration path relative to the project root.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "config" / "settings.json"
 
 # Define the maximum set of tables that can be authorized.
-SUPPORTED_TABLES = {
-    "person",
-    "specimen",
-    "variant_occurrence",
-    "target_gene",
-    "variant_annotation"
-}
-
+@lru_cache(maxsize=1)
+def get_supported_tables() -> set[str]:
+    """Retrieve available tables from the PostgreSQL cdm schema."""
+    return set(get_database_schema().keys())
 
 def validate_config(config: dict) -> dict:
     """Validate application configuration values."""
@@ -76,7 +74,7 @@ def validate_config(config: dict) -> dict:
     if len(tables) != len(set(tables)):
         raise ValueError("Allowed tables must not contain duplicates.")
 
-    if not set(tables).issubset(SUPPORTED_TABLES):
+    if not set(tables).issubset(get_supported_tables()):
         raise ValueError("Configuration contains unsupported tables.")
 
     # Validate maximum saved queries.
