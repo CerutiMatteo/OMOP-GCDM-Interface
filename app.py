@@ -11,6 +11,7 @@ from src.textToSQL import generate_sql
 from src.configManager import load_config, save_config
 from src.historyManager import load_history, save_history, export_history, import_history
 from src.configManager import get_supported_tables
+from src.visualQueryComponents import render_visual_editor
 
 #INITIALIZATION
 
@@ -37,6 +38,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+#Customize the panels for visual query and history section
+st.markdown(
+    """
+    <style>
+    /* Query Editor panel */
+    .st-key-query_editor_panel {
+        background-color: #171717;
+        border: 1px solid #333333;
+        border-radius: 12px;
+        padding: 18px;
+    }
+    
+    /* Solo il contenuto interno dell'expander */
+    div[data-testid="stExpanderDetails"] {
+        background-color: #171717 !important;
+        color: #F5F5F5 !important;
+        padding: 20px !important;
+        border-radius: 0 0 10px 10px;
+    }
+    
+    /* Testo all'interno dell'expander */
+    div[data-testid="stExpanderDetails"] p,
+    div[data-testid="stExpanderDetails"] label {
+        color: #F5F5F5 !important;
+    }
+    
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Load the saved application configuration.
 if "config" not in st.session_state:
     st.session_state["config"] = load_config()
@@ -54,6 +86,12 @@ if "max_rows" not in st.session_state:
 # Keep history expanders collapsed on application startup.
 if "collapse_history" not in st.session_state:
     st.session_state["collapse_history"] = True
+# Initialize the query editor mode.
+if "query_editor_mode" not in st.session_state:
+    st.session_state["query_editor_mode"] = "Visual Editor"
+# Track visual editor widget versions.
+if "visual_editor_version" not in st.session_state:
+    st.session_state["visual_editor_version"] = 0
 
 # Create the sidebar navigation menu.
 with st.sidebar:
@@ -124,7 +162,7 @@ if page == "🔍 Interrogazione":
                     retry_message.empty()
 
                     if sql.strip() == "CANNOT_GENERATE_SQL":
-                        st.error("Unable to generate SQL query for this question.")
+                        st.error("Unable to generate SQL query for this question. Please try rephrasing your request.")
                         st.session_state.pop("generated_sql", None)
 
                     else:
@@ -132,6 +170,11 @@ if page == "🔍 Interrogazione":
                         # reruns.
                         st.session_state["generated_sql"] = sql
                         st.session_state["editable_sql"] = sql
+
+                        # Reset the editors for the new query.
+                        st.session_state["query_editor_mode"] = "Visual Editor"
+                        st.session_state["previous_query_editor_mode"] = None
+                        st.session_state["visual_editor_version"] += 1
 
                         # Save the question associated with the generated SQL.
                         st.session_state["generated_question"] = question
@@ -190,10 +233,50 @@ if page == "🔍 Interrogazione":
         else:
             st.warning("Please enter a question.")
 
-    # Display editable SQL only when developer mode is enabled.
+    # Display the query editors only in Programmer Mode.
     if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):
-        st.subheader("Generated SQL")
-        st.text_area("SQL Query", key="editable_sql", height=250, label_visibility="collapsed", help="Review and modify the generated SQL before execution.")
+
+        with st.container(border=True, key="query_editor_panel"):
+
+            title_col, mode_col = st.columns([3, 1], vertical_alignment="center")
+
+            with title_col:
+                st.subheader("Query Editor")
+
+            with mode_col:
+                st.markdown(":material/terminal: &nbsp; Programmer Mode")
+
+            previous_mode = st.session_state.get("previous_query_editor_mode", None,)
+
+            editor_mode = st.radio(
+                "Query Editor Mode",
+                ["Visual Editor", "SQL Editor"],
+                key="query_editor_mode",
+                horizontal=True,
+                label_visibility="collapsed",
+            )
+
+            if (
+                    editor_mode == "Visual Editor"
+                    and previous_mode != "Visual Editor"
+            ):
+                st.session_state["visual_editor_version"] += 1
+
+            st.session_state["previous_query_editor_mode"] = editor_mode
+
+            if editor_mode == "Visual Editor":
+
+                render_visual_editor()
+
+            else:
+
+                st.text_area(
+                    "SQL Query",
+                    key="editable_sql",
+                    height=250,
+                    label_visibility="collapsed",
+                    help="Review and modify the SQL query before execution.",
+                )
 
     # Execute the SQL query generated by Gemini.
     if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):

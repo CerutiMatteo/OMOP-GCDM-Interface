@@ -152,12 +152,44 @@ def generate_sql(question, on_retry=None):
     You are an expert in PostgreSQL and the OMOP G-CDM database.
 
     Generate a PostgreSQL SELECT query that answers the user's question.
+    
+    The user's question may be written in Italian, English, or another language.
+
+    Interpret the question in its original language and
+    internally normalize its meaning into English before
+    generating SQL.
+
+    Use English OMOP terminology to identify the appropriate
+    database tables, columns, and clinical concepts.
+
+    Preserve the exact meaning of the original question,
+    including filters, quantities, dates, and clinical conditions.
+
+    Do not output the translated question. Return only the final SQL query.
 
     Use only the tables and columns provided in the database schema.
     Use the provided relationships to construct JOIN operations.
     Do not invent tables, columns, or relationships.
-    Do not generate INSERT, UPDATE, DELETE, DROP, or other
-    modifying statements.
+    Do not generate INSERT, UPDATE, DELETE, DROP, or other modifying statements.
+    
+    OMOP SCHEMA SEMANTICS:
+
+    In the OMOP Common Data Model, the person table
+    represents the individuals recorded in the database.
+
+    Natural-language terms such as "patient", "patients",
+    "paziente", "pazienti", "person" and "people"
+    generally refer to records in the person table.
+
+    When the user asks to list or count patients,
+    use the person table, if available in the provided schema.
+
+    When the user asks for patients with specific clinical
+    conditions, use the appropriate clinical event tables
+    and join them through person_id when necessary.
+
+    Do not invent tables named patient or patients.
+    Always respect the provided database schema.
 
     OMOP VOCABULARY CONTEXT:
     {vocabulary_context}
