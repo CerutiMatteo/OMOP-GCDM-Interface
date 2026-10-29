@@ -41,8 +41,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-#Customize the panels for visual query and history section
-
 # Customize the Query Editor and Query History panels.
 st.markdown(
     """
@@ -50,22 +48,21 @@ st.markdown(
     /* Query Editor panel */
     .st-key-query_editor_panel {
         background-color: #171717;
+        color: #F5F5F5;
         border: 1px solid #333333;
         border-radius: 12px;
         padding: 18px;
     }
 
-    /* Query Editor headings and labels */
+    /* Query Editor headings, descriptions and labels */
     .st-key-query_editor_panel h1,
     .st-key-query_editor_panel h2,
     .st-key-query_editor_panel h3,
-    .st-key-query_editor_panel label {
+    .st-key-query_editor_panel label,
+    .st-key-query_editor_panel [data-testid="stMarkdownContainer"] p,
+    .st-key-query_editor_panel [data-testid="stMarkdownContainer"] strong {
         color: #F5F5F5 !important;
-    }
-
-    /* Descriptive text in the Visual Editor */
-    .st-key-query_editor_panel .stMarkdown p {
-        color: #F5F5F5 !important;
+        -webkit-text-fill-color: #F5F5F5 !important;
     }
 
     /* Input fields: dark text on light background */
@@ -75,10 +72,9 @@ st.markdown(
         -webkit-text-fill-color: #111111 !important;
     }
 
-    /* Code blocks: dark text on light background */
+    /* Code blocks: preserve readability on light background */
     .st-key-query_editor_panel [data-testid="stCodeBlock"] pre,
-    .st-key-query_editor_panel [data-testid="stCodeBlock"] code,
-    .st-key-query_editor_panel [data-testid="stCodeBlock"] span {
+    .st-key-query_editor_panel [data-testid="stCodeBlock"] code {
         color: #111111 !important;
         -webkit-text-fill-color: #111111 !important;
     }
@@ -100,6 +96,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 # Customize the Download CSV button.
 st.markdown("""
@@ -288,7 +285,8 @@ if page == "💬 Query Interface":
                     ):
                         st.warning("The AI model used to convert natural language into SQL is currently experiencing high demand. Please wait a moment and try again.")
                     else:
-                        st.error("An unexpected error occurred while generating the SQL query. Please try again later.")
+                        st.error("An unexpected error occurred while generating the SQL query.")
+                        st.exception(e)
 
         else:
             st.warning("Please enter a question.")

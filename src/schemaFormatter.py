@@ -29,19 +29,6 @@ def format_schema_for_llm(schema, selected_tables=None):
                 f"{fk['references_table']}.{fk['references_column']}"
             )
 
-        # Add manually defined logical relationships
-        lines.append("LOGICAL RELATIONSHIPS:")
-        for relationship in table_info["logical_relationships"]:
-            # Include relationships only if the target table is selected
-            if (selected_tables is not None
-                    and relationship["target_table"] not in selected_tables):
-                continue
-            lines.append(
-                f"  - {relationship['source_column']} -> "
-                f"{relationship['target_table']}."
-                f"{relationship['target_column']}"
-            )
-
         lines.append("")
 
     return "\n".join(lines)
