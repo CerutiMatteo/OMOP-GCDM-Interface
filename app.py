@@ -12,6 +12,9 @@ from src.configManager import load_config, save_config
 from src.historyManager import load_history, save_history, export_history, import_history
 from src.configManager import get_supported_tables
 from src.visualQueryComponents import render_visual_editor
+from src.queryAnalyzer import analyze_query
+from src.schemaVisualizer import visualize_query_structure
+from src.databaseExplorer import render_database_explorer
 
 #INITIALIZATION
 
@@ -39,6 +42,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 #Customize the panels for visual query and history section
+
+# Customize the Query Editor and Query History panels.
 st.markdown(
     """
     <style>
@@ -49,25 +54,72 @@ st.markdown(
         border-radius: 12px;
         padding: 18px;
     }
-    
-    /* Solo il contenuto interno dell'expander */
+
+    /* Query Editor headings and labels */
+    .st-key-query_editor_panel h1,
+    .st-key-query_editor_panel h2,
+    .st-key-query_editor_panel h3,
+    .st-key-query_editor_panel label {
+        color: #F5F5F5 !important;
+    }
+
+    /* Descriptive text in the Visual Editor */
+    .st-key-query_editor_panel .stMarkdown p {
+        color: #F5F5F5 !important;
+    }
+
+    /* Input fields: dark text on light background */
+    .st-key-query_editor_panel input,
+    .st-key-query_editor_panel textarea {
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+    }
+
+    /* Code blocks: dark text on light background */
+    .st-key-query_editor_panel [data-testid="stCodeBlock"] pre,
+    .st-key-query_editor_panel [data-testid="stCodeBlock"] code,
+    .st-key-query_editor_panel [data-testid="stCodeBlock"] span {
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+    }
+
+    /* Query History expander */
     div[data-testid="stExpanderDetails"] {
         background-color: #171717 !important;
         color: #F5F5F5 !important;
         padding: 20px !important;
         border-radius: 0 0 10px 10px;
     }
-    
-    /* Testo all'interno dell'expander */
+
+    /* Query History text */
     div[data-testid="stExpanderDetails"] p,
     div[data-testid="stExpanderDetails"] label {
         color: #F5F5F5 !important;
     }
-    
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+# Customize the Download CSV button.
+st.markdown("""
+<style>
+    div[class*="st-key-download_history_"] button {
+        background-color: #262730 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #444444 !important;
+    }
+
+    div[class*="st-key-download_history_"] button:hover {
+        background-color: #363945 !important;
+        color: #FFFFFF !important;
+    }
+
+    div[class*="st-key-download_history_"] button p {
+        color: #FFFFFF !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Load the saved application configuration.
 if "config" not in st.session_state:
@@ -97,7 +149,15 @@ if "visual_editor_version" not in st.session_state:
 with st.sidebar:
     st.title("📋 OMOP G-CDM")
 
-    page = st.radio( "Menu:", ["🔍 Interrogazione", "⚙️ Impostazioni", "🛠️ Diagnostica"])
+    page = st.radio(
+        "Menu:",
+        [
+            "💬 Query Interface",
+            "🔍 Database Explorer",
+            "⚙️ Settings",
+            "🛠️ Diagnostics"
+        ]
+    )
 
 # Read the PostgreSQL connection settings from Streamlit secrets.
 db_config = st.secrets["connections"]["omop"]
@@ -117,7 +177,7 @@ def connect_db():
 
 # MAIN PAGE:
 
-if page == "🔍 Interrogazione":
+if page == "💬 Query Interface":
 
     st.title("🧬 OMOP G-CDM Interface")
     st.write("Natural language interface for querying the OMOP G-CDM database.")
@@ -480,15 +540,36 @@ if page == "🔍 Interrogazione":
 
                 # Display the query results.
                 st.subheader("Query Results")
-
                 df = item["results"]
-
-                st.dataframe(df, width="stretch", hide_index=True)
-
+                st.dataframe(
+                    df,
+                    width="stretch",
+                    hide_index=True
+                )
                 st.write(f"Total rows: {len(df)}")
 
                 # Allow the user to download the results.
-                st.download_button(label="Download CSV", data=df.to_csv(index=False).encode("utf-8-sig"), file_name=f"query_results_{index + 1}.csv", mime="text/csv", key=f"download_history_{index}")
+                st.download_button(label="Download Table (.CSV)", data=df.to_csv(index=False).encode("utf-8-sig"), file_name=f"query_results_{index + 1}.csv", mime="text/csv", key=f"download_history_{index}")
+
+                # Query tables relationships
+                st.subheader("Query Table Relationships")
+                try:
+                    # Analyze the SQL query that was actually executed.
+                    query_analysis = analyze_query(item["sql"])
+                    # Generate the diagram using Graphviz.
+                    diagram = visualize_query_structure(query_analysis)
+                    # Adjust the diagram width based on the number of tables.
+                    table_count = len(query_analysis["tables"])
+                    if table_count == 1:
+                        diagram_width = 300
+                    elif table_count == 2:
+                        diagram_width = 500
+                    else:
+                        diagram_width = 800
+                    # Display the diagram.
+                    st.graphviz_chart(diagram.source,width=diagram_width)
+                except Exception as e:
+                    st.warning(f"Unable to visualize query table relationships: {e}")
 
         # Return to the question input and automatically focus the text field
         components.html(
@@ -558,9 +639,18 @@ if page == "🔍 Interrogazione":
 
 ##############################################################################################
 
+# DATABASE EXPLORER:
+
+elif page == "🔍 Database Explorer":
+
+    render_database_explorer()
+
+
+##############################################################################################
+
 # SETTINGS:
 
-elif page == "⚙️ Impostazioni":
+elif page == "⚙️ Settings":
 
     st.title("⚙️ Settings")
 
@@ -680,9 +770,9 @@ elif page == "⚙️ Impostazioni":
 
 # DIAGNOSTICS:
 
-elif page == "🛠️ Diagnostica":
+elif page == "🛠️ Diagnostics":
 
-    st.title("🛠️ Database Diagnostics")
+    st.title("🛠️ Diagnostics")
 
 
     # Test the PostgreSQL connection.

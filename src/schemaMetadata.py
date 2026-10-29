@@ -1,8 +1,6 @@
 import psycopg
 import streamlit as st
 
-from .logicalRelationships import LOGICAL_RELATIONSHIPS
-
 def get_database_schema():
     # RETRIVE DB CONF
     db_config = st.secrets["connections"]["omop"]
@@ -54,8 +52,7 @@ def get_database_schema():
                         for column_name, data_type in columns
                     },
                     "primary_keys": [],
-                    "foreign_keys": [],
-                    "logical_relationships": []
+                    "foreign_keys": []
                 }
 
 
@@ -125,23 +122,8 @@ def get_database_schema():
                     "references_column": target_column
                 })
 
-            # add relationships defined inside logicalRelationships -> LOGICAL_RELATIONSHIPS inside schema dictionary
-            for relationship in LOGICAL_RELATIONSHIPS:
-                source_table = relationship["source_table"]
-                source_column = relationship["source_column"]
-                target_table = relationship["target_table"]
-                target_column = relationship["target_column"]
-
-                if source_table not in schema or target_table not in schema:
-                    raise ValueError(f"Tabella inesistente nella relazione: {relationship}")
-
-                if (source_column not in schema[source_table]["columns"]
-                        or target_column not in schema[target_table]["columns"]):
-                    raise ValueError(f"Colonna inesistente nella relazione: {relationship}")
-
-                schema[source_table]["logical_relationships"].append(relationship.copy())
-
     return schema
+
 
 #TEST: ONLY WHEN WE RUN THIS FILE
 if __name__ == "__main__":
@@ -162,4 +144,3 @@ if __name__ == "__main__":
         print("Colonne:", list(database_schema[table_name]["columns"].keys()))
         print("Primary keys:", database_schema[table_name]["primary_keys"])
         print("Foreign keys:", database_schema[table_name]["foreign_keys"])
-        print("Relazioni logiche:", database_schema[table_name]["logical_relationships"])
