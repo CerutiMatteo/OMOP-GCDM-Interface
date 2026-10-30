@@ -1,6 +1,8 @@
 import sqlglot
 from sqlglot import exp
 
+from .schemaMetadata import get_database_schema
+
 
 def analyze_query(sql: str) -> dict:
     """Analyze tables, referenced/selected columns and explicit equality JOINs.
@@ -30,6 +32,16 @@ def analyze_query(sql: str) -> dict:
         aliases[table.alias_or_name] = table.name
 
     single_table_alias = tables[0]["alias"] if len(tables) == 1 else None
+
+    # Load table columns only when needed for SELECT *.
+    def get_table_columns(table_name):
+        schema = get_database_schema()
+        table_metadata = schema.get(table_name)
+
+        if table_metadata is None:
+            return []
+
+        return list(table_metadata["columns"].keys())
 
     def resolve_alias(column):
         return column.table or single_table_alias
@@ -62,6 +74,56 @@ def analyze_query(sql: str) -> dict:
     for select in select_statements:
         for projection in select.expressions:
             expression = projection.this if isinstance(projection, exp.Alias) else projection
+            # Handle SELECT *.
+            if isinstance(expression, exp.Star):
+                for table in tables:
+                    alias = table["alias"]
+
+                    for column_name in get_table_columns(table["name"]):
+                        column_info = {
+                            "table": table["name"],
+                            "alias": alias,
+                            "column": column_name,
+                        }
+
+                        if column_info not in columns:
+                            columns.append(column_info)
+
+                        selected_info = {
+                            "alias": alias,
+                            "column": column_name,
+                        }
+
+                        if selected_info not in selected_columns:
+                            selected_columns.append(selected_info)
+
+                continue
+
+            # Handle SELECT alias.*.
+            if isinstance(expression, exp.Column) and isinstance(expression.this, exp.Star):
+                alias = expression.table
+
+                if alias in aliases:
+                    for column_name in get_table_columns(aliases[alias]):
+                        column_info = {
+                            "table": aliases[alias],
+                            "alias": alias,
+                            "column": column_name,
+                        }
+
+                        if column_info not in columns:
+                            columns.append(column_info)
+
+                        selected_info = {
+                            "alias": alias,
+                            "column": column_name,
+                        }
+
+                        if selected_info not in selected_columns:
+                            selected_columns.append(selected_info)
+
+                continue
+
             candidates = [expression] if isinstance(expression, exp.Column) else list(expression.find_all(exp.Column))
             for column in candidates:
                 alias = resolve_alias(column)

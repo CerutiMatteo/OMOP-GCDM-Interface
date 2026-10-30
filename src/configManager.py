@@ -30,7 +30,8 @@ def validate_config(config: dict) -> dict:
         "retry_delay_seconds",
         "allowed_tables",
         "max_history",
-        "history_path"
+        "history_path",
+        "next_query_id"
     }
 
     if set(config) != required_keys:
@@ -106,6 +107,13 @@ def validate_config(config: dict) -> dict:
     if not resolved_path.is_relative_to(allowed_directory):
         raise ValueError("History must be saved inside the data directory.")
 
+    # Validate the next query ID.
+    if type(config["next_query_id"]) is not int:
+        raise ValueError("Next query ID must be an integer.")
+
+    if config["next_query_id"] < 1:
+        raise ValueError("Next query ID must be greater than zero.")
+
     return config
 
 
@@ -148,3 +156,17 @@ def save_config(config: dict) -> None:
     finally:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
+
+
+def get_next_query_id() -> int:
+    """Return the next available query ID."""
+    config = load_config()
+    return config["next_query_id"]
+
+
+def increment_next_query_id() -> None:
+    """Increment and persist the next available query ID."""
+    config = load_config()
+    config["next_query_id"] += 1
+    save_config(config)
+

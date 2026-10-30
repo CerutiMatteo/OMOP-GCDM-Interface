@@ -218,15 +218,23 @@ def _collect_editable_nodes(statement):
     editable_nodes = []
 
     # Inspect WHERE clauses, including nested SELECT queries.
+    visited_nodes = set()
+
     for where in statement.find_all(exp.Where):
 
         for node in where.walk():
 
             if not isinstance(
-                node,
-                tuple(SUPPORTED_OPERATORS.keys()),
+                    node,
+                    tuple(SUPPORTED_OPERATORS.keys()),
             ):
                 continue
+
+            # Avoid processing the same AST node more than once.
+            if id(node) in visited_nodes:
+                continue
+
+            visited_nodes.add(id(node))
 
             parameter = _get_comparison_parameter(
                 node,

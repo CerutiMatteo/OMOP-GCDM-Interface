@@ -11,6 +11,7 @@ from src.textToSQL import generate_sql
 from src.configManager import load_config, save_config
 from src.historyManager import load_history, save_history, export_history, import_history
 from src.configManager import get_supported_tables
+from src.configManager import get_next_query_id, increment_next_query_id
 from src.visualQueryComponents import render_visual_editor
 from src.queryAnalyzer import analyze_query
 from src.schemaVisualizer import visualize_query_structure
@@ -19,9 +20,10 @@ from src.databaseExplorer import render_database_explorer
 #INITIALIZATION
 
 # Configure the Streamlit page.
-st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide")
+st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
 
 # Customize the hover colors of the Query History buttons.
+
 st.markdown("""
 <style>
     /* Clear - Red */
@@ -38,6 +40,42 @@ st.markdown("""
     .st-key-load_query_history button:hover {
         color: #2196F3 !important;
     }
+
+    /* Individual Delete buttons: red text and icon on hover */
+    div[class*="st-key-delete_query_"] button:hover {
+        color: #FF4B4B !important;
+        border-color: #FF4B4B !important;
+    }
+
+    div[class*="st-key-delete_query_"] button:hover p,
+    div[class*="st-key-delete_query_"] button:hover span,
+    div[class*="st-key-delete_query_"] button:hover svg {
+        color: #FF4B4B !important;
+        stroke: #FF4B4B !important;
+    }
+
+    /* Confirmation dialog Delete button - Red */
+    .st-key-confirm_delete_single_query button {
+        background-color: #D32F2F !important;
+        border-color: #D32F2F !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Confirmation dialog Delete button - Darker red on hover */
+    .st-key-confirm_delete_single_query button:hover {
+        background-color: #B71C1C !important;
+        border-color: #B71C1C !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Keep confirmation button text and icon white */
+    .st-key-confirm_delete_single_query button p,
+    .st-key-confirm_delete_single_query button span,
+    .st-key-confirm_delete_single_query button svg {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,9 +159,38 @@ st.markdown("""
 # Load the saved application configuration.
 if "config" not in st.session_state:
     st.session_state["config"] = load_config()
+
 # Restore the saved query history.
 if "query_history" not in st.session_state:
     st.session_state["query_history"] = load_history()
+
+# Assign IDs to queries that do not have one.
+history = st.session_state["query_history"]
+
+existing_ids = {
+    item["id"] for item in history if "id" in item
+}
+
+next_id = max(existing_ids, default=0) + 1
+
+for item in history:
+    if "id" not in item:
+        item["id"] = next_id
+        existing_ids.add(next_id)
+        next_id += 1
+
+# Synchronize the persistent counter.
+highest_id = max(
+    (item["id"] for item in history),
+    default=0
+)
+
+config = load_config()
+
+if config["next_query_id"] <= highest_id:
+    config["next_query_id"] = highest_id + 1
+    save_config(config)
+
 # Initialize the question input counter.
 if "question_number" not in st.session_state:
     st.session_state["question_number"] = len(st.session_state["query_history"])
@@ -189,7 +256,12 @@ if page == "💬 Query Interface":
     col_input, col_button = st.columns([5, 1], gap="small", vertical_alignment="bottom")
 
     with col_input:
-        question = st.text_input("Question", key=f"question_input_{st.session_state['question_number']}", label_visibility="collapsed")
+        question = st.text_input(
+            "Question",
+            placeholder="Ask a question about the OMOP G-CDM database...",
+            key=f"question_input_{st.session_state['question_number']}",
+            label_visibility="collapsed"
+        )
 
     with col_button:
         generate_clicked = st.button("Generate Query", icon=":material/send:", use_container_width=True)
@@ -198,7 +270,6 @@ if page == "💬 Query Interface":
 
         # Collapse previous results when generating a new query.
         st.session_state["collapse_history"] = True
-        st.session_state["history_version"] = (st.session_state.get("history_version", 0) + 1)
 
         if question.strip():
 
@@ -237,7 +308,7 @@ if page == "💬 Query Interface":
                         st.session_state["generated_question"] = question
 
                         if st.session_state.get("developer_mode", False):
-                            st.success("SQL query generated successfully!")
+                            st.rerun()
 
                         else:
 
@@ -249,10 +320,17 @@ if page == "💬 Query Interface":
                                         df = execute_sql(sql, conn, max_rows=st.session_state.get("max_rows", 1000))
 
                                     # Save the query and its results to the history.
-                                    st.session_state["query_history"].append({"question": question, "sql": sql, "results": df.copy()})
+                                    query_id = get_next_query_id()
 
-                                    # Persist the updated query history.
+                                    st.session_state["query_history"].append({
+                                        "id": query_id,
+                                        "question": question,
+                                        "sql": sql,
+                                        "results": df.copy()
+                                    })
+
                                     save_history(st.session_state["query_history"])
+                                    increment_next_query_id()
 
                                     # Clear the pending query.
                                     st.session_state.pop("generated_sql", None)
@@ -354,8 +432,11 @@ if page == "💬 Query Interface":
                         # Validate and execute the generated query.
                         df = execute_sql(sql, conn, max_rows=st.session_state.get("max_rows", 1000))
 
-                    # Save the completed query only once.
+                    # Save the completed query with a permanent ID.
+                    query_id = get_next_query_id()
+
                     st.session_state["query_history"].append({
+                        "id": query_id,
                         "question": st.session_state["generated_question"],
                         "sql": sql,
                         "results": df.copy()
@@ -363,6 +444,7 @@ if page == "💬 Query Interface":
 
                     # Persist the updated query history.
                     save_history(st.session_state["query_history"])
+                    increment_next_query_id()
 
                     # Clear the pending query and SQL editor.
                     st.session_state.pop("generated_sql", None)
@@ -382,6 +464,50 @@ if page == "💬 Query Interface":
             except Exception as e:
                 st.error(f"Query execution failed: {e}")
 
+
+    @st.dialog("Delete Query")
+    def confirm_delete_query(index):
+
+        st.warning(
+            "Are you sure you want to delete this query from the history? "
+            "This action cannot be undone."
+        )
+
+        col_cancel, col_delete = st.columns(2)
+
+        with col_cancel:
+            if st.button("Cancel", use_container_width=True):
+                st.rerun()
+
+        with col_delete:
+            if st.button(
+                    "Delete Query",
+                    icon=":material/delete_outline:",
+                    type="primary",
+                    key="confirm_delete_single_query",
+                    use_container_width=True
+            ):
+                # Create an updated history without the selected query.
+                updated_history = (
+                        st.session_state["query_history"][:index]
+                        + st.session_state["query_history"][index + 1:]
+                )
+
+                # Persist the updated history.
+                save_history(updated_history)
+
+                # Update session history.
+                st.session_state["query_history"] = updated_history
+
+                # Refresh the history expanders.
+                st.session_state["history_version"] = (
+                        st.session_state.get("history_version", 0) + 1
+                )
+
+                # Keep the remaining results collapsed.
+                st.session_state["collapse_history"] = True
+
+                st.rerun()
 
     @st.dialog("Clear Query History")
     def confirm_clear_history():
@@ -473,11 +599,24 @@ if page == "💬 Query Interface":
 
                     restored_history = imported_history[-max_history:]
 
-                    # Persist the imported history first.
+                    # Synchronize the counter with imported query IDs.
+                    highest_imported_id = max(
+                        (item["id"] for item in restored_history),
+                        default=0
+                    )
+
+                    config = load_config()
+
+                    if config["next_query_id"] <= highest_imported_id:
+                        config["next_query_id"] = highest_imported_id + 1
+                        save_config(config)
+
+                    # Persist the imported history.
                     save_history(restored_history)
 
                     # Update session state only after a successful save.
                     st.session_state["query_history"] = restored_history
+
                     st.session_state["question_number"] = len(restored_history)
 
                     st.session_state.pop("generated_sql", None)
@@ -522,32 +661,55 @@ if page == "💬 Query Interface":
             is_latest = index == len(st.session_state["query_history"]) - 1
 
             with st.expander(
-                    f"Question {index + 1} — {item['question']}",
+                    f"Question {item['id']} — {item['question']}",
                     expanded=(
                             is_latest
                             and not st.session_state["collapse_history"]
                             and "generated_sql" not in st.session_state
                     ),
-                    key=f"history_{index}_{st.session_state.get('history_version', 0)}"
+                    key=f"history_{item['id']}"
             ):
 
-                # Display executed SQL in developer mode.
+                # Header with title and Delete button.
+                col_title, col_delete = st.columns(
+                    [5, 1],
+                    vertical_alignment="center"
+                )
+                with col_title:
+                    if st.session_state.get("developer_mode", False):
+                        st.subheader("Generated Query")
+                    else:
+                        st.subheader("Query Results")
+                with col_delete:
+                    if st.button(
+                            "Delete",
+                            icon=":material/delete_outline:",
+                            key=f"delete_query_{item['id']}",
+                            type="tertiary",
+                            use_container_width=True
+                    ):
+                        confirm_delete_query(index)
+
+                # Display executed SQL in Programmer Mode.
                 if st.session_state.get("developer_mode", False):
-                    st.subheader("Generated Query")
                     st.code(item["sql"], language="sql")
 
                 # Display the query results.
-                st.subheader("Query Results")
+                if st.session_state.get("developer_mode", False):
+                    st.subheader("Query Results")
+
                 df = item["results"]
+
                 st.dataframe(
                     df,
                     width="stretch",
                     hide_index=True
                 )
+
                 st.write(f"Total rows: {len(df)}")
 
                 # Allow the user to download the results.
-                st.download_button(label="Download Table (.CSV)", data=df.to_csv(index=False).encode("utf-8-sig"), file_name=f"query_results_{index + 1}.csv", mime="text/csv", key=f"download_history_{index}")
+                st.download_button(label="Download Table (.CSV)", data=df.to_csv(index=False).encode("utf-8-sig"), file_name=f"query_results_{item['id']}.csv", mime="text/csv", key=f"download_history_{item['id']}")
 
                 # Query tables relationships
                 st.subheader("Query Table Relationships")
@@ -657,7 +819,7 @@ elif page == "⚙️ Settings":
     # Save a validated configuration update.
     def update_setting(name, value):
 
-        updated_config = st.session_state["config"].copy()
+        updated_config = load_config()
         updated_config[name] = value
 
         try:

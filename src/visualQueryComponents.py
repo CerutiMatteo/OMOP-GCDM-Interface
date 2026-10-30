@@ -26,9 +26,8 @@ def render_visual_editor():
 
     if not parameters:
         st.info("No editable parameters were found in this SQL query.")
-        return
-
-    st.caption("Modify the parameters below to update the SQL query.")
+    else:
+        st.caption("Modify the parameters below to update the SQL query.")
 
     # Identify the current query version. The version changes when switching from SQL to visual mode.
     version = st.session_state.get("visual_editor_version", 0)
@@ -102,7 +101,7 @@ def render_visual_editor():
         ))
 
         st.text_input(
-            "Tables Involved",
+            "Tables Involved (read-only field)",
             value=",    ".join(tables_involved),
             disabled=True,
             key=f"tables_involved_{sql}"
@@ -112,8 +111,7 @@ def render_visual_editor():
         st.warning(f"Unable to identify tables: {e}")
 
 
-
     # CURRENT SQL
 
-    st.markdown("**Current SQL**")
+    st.markdown("**Current SQL:**")
     st.code(sql, language="sql")

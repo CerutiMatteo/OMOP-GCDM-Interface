@@ -53,5 +53,6 @@
     "vocabulary"
   ],
   "max_history": 100,
-  "history_path": "data/currentHistory.json"
+  "history_path": "data/currentHistory.json",
+  "next_query_id": 12
 }
