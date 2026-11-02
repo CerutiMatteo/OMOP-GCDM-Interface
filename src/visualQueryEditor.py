@@ -1,378 +1,200 @@
-
+import datetime
+import math
+import re
 import sqlglot
 from sqlglot import exp
 
-
-# Supported comparison operators for the visual editor.
-SUPPORTED_OPERATORS = {
-    exp.EQ: "=",
-    exp.NEQ: "!=",
-    exp.GT: ">",
-    exp.GTE: ">=",
-    exp.LT: "<",
-    exp.LTE: "<=",
-}
+OPS = {exp.EQ: '=', exp.NEQ: '!=', exp.GT: '>', exp.GTE: '>=', exp.LT: '<', exp.LTE: '<='}
+DATE_COLUMNS = {'date', 'datetime', 'birth_datetime'}
 
 
-def _parse_sql(sql: str):
-    """
-    Parse a single PostgreSQL SQL statement.
-
-    This function only checks whether the statement can be parsed.
-    Security validation remains the responsibility of sqlValidator.py.
-    """
-
+def _parse(sql):
     try:
-        statements = sqlglot.parse(sql, read="postgres")
-    except sqlglot.errors.ParseError as e:
-        raise ValueError(f"Invalid SQL syntax: {e}") from e
-
-    if len(statements) != 1 or statements[0] is None:
-        raise ValueError("Exactly one SQL statement is required.")
-
-    statement = statements[0]
-
-    if not isinstance(statement, (exp.Select, exp.Union)):
-        raise ValueError("Only SELECT queries are supported.")
-
-    return statement
+        statements = sqlglot.parse(sql, read='postgres')
+    except sqlglot.errors.ParseError as exc:
+        raise ValueError(f'Invalid SQL: {exc}') from exc
+    if len(statements) != 1 or not isinstance(statements[0], (exp.Select, exp.Union)):
+        raise ValueError('Exactly one SELECT query is required')
+    return statements[0]
 
 
-def _get_literal_value(node):
-    """
-    Extract the Python value and type of a SQL literal.
-
-    Return None when the expression cannot be represented
-    as a simple editable value.
-    """
-
+def _literal(node):
+    if isinstance(node, exp.Boolean):
+        return bool(node.this), 'boolean'
     if isinstance(node, exp.Literal):
-
         if node.is_string:
-            return {
-                "value": node.this,
-                "value_type": "string",
-            }
-
+            return node.this, 'string'
         try:
-            value = int(node.this)
-            value_type = "integer"
-
+            return int(node.this), 'integer'
         except ValueError:
             try:
-                value = float(node.this)
-                value_type = "float"
-
+                return float(node.this), 'float'
             except ValueError:
                 return None
-
-        return {
-            "value": value,
-            "value_type": value_type,
-        }
-
-    if isinstance(node, exp.Boolean):
-        return {
-            "value": bool(node.this),
-            "value_type": "boolean",
-        }
-
+    if isinstance(node, exp.Neg) and isinstance(node.this, exp.Literal) and not node.this.is_string:
+        result = _literal(node.this)
+        return (-result[0], result[1]) if result else None
+    if isinstance(node, exp.Cast) and isinstance(node.this, exp.Literal) and node.this.is_string:
+        target = node.args.get('to')
+        if target and 'DATE' in target.sql().upper():
+            return node.this.this, 'date'
     return None
 
 
-def _create_literal(value, value_type):
-    """
-    Convert a Python value into a SQLGlot literal.
-
-    The value type is preserved to avoid accidentally
-    changing the meaning of the SQL expression.
-    """
-
-    if value_type == "string":
-        return exp.Literal.string(str(value))
-
-    if value_type == "integer":
-
-        if isinstance(value, bool):
-            raise ValueError("An integer value is required.")
-
-        try:
-            converted = int(value)
-        except (ValueError, TypeError, OverflowError):
-            raise ValueError("Invalid integer value.")
-
-        if str(converted) != str(value).strip():
-            raise ValueError("Invalid integer value.")
-
-        return exp.Literal.number(converted)
-
-    if value_type == "float":
-
-        if isinstance(value, bool):
-            raise ValueError("A numeric value is required.")
-
-        try:
-            converted = float(value)
-        except (ValueError, TypeError, OverflowError):
-            raise ValueError("Invalid numeric value.")
-
-        if not (
-            float("-inf") < converted < float("inf")
-        ):
-            raise ValueError("The numeric value must be finite.")
-
-        return exp.Literal.number(str(converted))
-
-    if value_type == "boolean":
-
-        if not isinstance(value, bool):
-            raise ValueError("A boolean value is required.")
-
-        return exp.Boolean(this=value)
-
-    raise ValueError(f"Unsupported value type: {value_type}")
+def _column(node):
+    return node if isinstance(node, exp.Column) else None
 
 
-def _get_column_name(node):
-    """
-    Return the SQL representation of a column.
-
-    Only direct column references are supported.
-    Calculations and SQL functions are excluded.
-    """
-
-    if isinstance(node, exp.Column):
-        return node.sql(dialect="postgres")
-
-    return None
+def _alias_tables(statement):
+    aliases = {}
+    for table in statement.find_all(exp.Table):
+        aliases[table.alias_or_name.lower()] = table.name.lower()
+    return aliases
 
 
-def _get_comparison_parameter(node, parameter_id):
-    """
-    Extract a simple comparison from the SQL syntax tree.
-
-    Supported forms:
-        column OP literal
-        literal OP column
-
-    Comparisons between two columns are not editable.
-    """
-
-    operator = None
-
-    for expression_type, symbol in SUPPORTED_OPERATORS.items():
-        if isinstance(node, expression_type):
-            operator = symbol
-            break
-
-    if operator is None:
+def _semantic(column, statement):
+    """Only recognize concepts when table identity can be established."""
+    if not column:
         return None
-
-    left = node.this
-    right = node.expression
-
-    left_column = _get_column_name(left)
-    right_column = _get_column_name(right)
-
-    left_literal = _get_literal_value(left)
-    right_literal = _get_literal_value(right)
-
-    # Example: p.year_of_birth < 1980
-    if left_column is not None and right_literal is not None:
-
-        return {
-            "id": parameter_id,
-            "type": "comparison",
-            "column": left_column,
-            "operator": operator,
-            "value": right_literal["value"],
-            "value_type": right_literal["value_type"],
-            "literal_side": "right",
-        }
-
-    # Example: 1980 > p.year_of_birth
-    if right_column is not None and left_literal is not None:
-
-        return {
-            "id": parameter_id,
-            "type": "comparison",
-            "column": right_column,
-            "operator": operator,
-            "value": left_literal["value"],
-            "value_type": left_literal["value_type"],
-            "literal_side": "left",
-        }
-
+    aliases = _alias_tables(statement)
+    name = column.name.lower()
+    alias = column.table.lower() if column.table else ''
+    table = aliases.get(alias) if alias else None
+    if table is None and not alias and len(set(aliases.values())) == 1:
+        table = next(iter(aliases.values()))
+    direct = {
+        'person': {'gender_concept_id', 'race_concept_id', 'ethnicity_concept_id'},
+        'visit_occurrence': {'visit_concept_id'},
+        'condition_occurrence': {'condition_concept_id'},
+        'measurement': {'measurement_concept_id'},
+    }
+    if name in direct.get(table, set()):
+        return name
+    # Only interpret concept.name/id when JOIN links it to person.gender_concept_id.
+    if table == 'concept' and name in {'concept_name', 'concept_id'}:
+        for eq in statement.find_all(exp.EQ):
+            left, right = eq.this, eq.expression
+            if not isinstance(left, exp.Column) or not isinstance(right, exp.Column):
+                continue
+            pair = ((left, right), (right, left))
+            for concept_col, person_col in pair:
+                if (concept_col.table.lower() == alias and concept_col.name.lower() == 'concept_id'
+                    and person_col.name.lower() == 'gender_concept_id'
+                    and aliases.get(person_col.table.lower()) == 'person'):
+                    return 'gender_concept_name' if name == 'concept_name' else 'gender_concept_id'
     return None
 
 
-def _collect_editable_nodes(statement):
-    """
-    Find editable SQL expressions and assign stable IDs
-    for the current version of the query.
+def _parameter(node, side, literal, pid, ptype, column, operator, statement):
+    value, value_type = literal
+    if value_type == 'string' and column is not None:
+        colname = column.name.lower()
+        if colname.endswith('_date') or colname.endswith('_datetime') or colname in DATE_COLUMNS:
+            try:
+                datetime.date.fromisoformat(value[:10])
+                if re.fullmatch(r'\d{4}-\d{2}-\d{2}', value):
+                    value_type = 'date'
+            except ValueError:
+                pass
+    return dict(id=pid, type=ptype, column=column.sql(dialect='postgres') if column else None,
+                operator=operator, value=value, value_type=value_type, literal_side=side,
+                semantic_field=_semantic(column, statement))
 
-    IDs are positional and must be recalculated whenever
-    the SQL structure is manually edited.
-    """
 
-    editable_nodes = []
-
-    # Inspect WHERE clauses, including nested SELECT queries.
-    visited_nodes = set()
-
+def _nodes(statement):
+    result = []
+    seen = set()
     for where in statement.find_all(exp.Where):
-
         for node in where.walk():
-
-            if not isinstance(
-                    node,
-                    tuple(SUPPORTED_OPERATORS.keys()),
-            ):
+            if id(node) in seen:
                 continue
-
-            # Avoid processing the same AST node more than once.
-            if id(node) in visited_nodes:
+            seen.add(id(node))
+            if isinstance(node, exp.Between):
+                col = _column(node.this)
+                low, high = _literal(node.args.get('low')), _literal(node.args.get('high'))
+                if col is not None and low is not None and high is not None:
+                    for side, literal in (('low', low), ('high', high)):
+                        result.append((node, _parameter(node, side, literal, len(result),
+                                        'between_lower' if side == 'low' else 'between_upper',
+                                        col, 'BETWEEN', statement)))
                 continue
-
-            visited_nodes.add(id(node))
-
-            parameter = _get_comparison_parameter(
-                node,
-                len(editable_nodes),
-            )
-
-            if parameter is not None:
-                editable_nodes.append((node, parameter))
-
-    # Inspect LIMIT clauses, including nested SELECT queries.
+            symbol = next((s for cls, s in OPS.items() if isinstance(node, cls)), None)
+            if symbol is None:
+                continue
+            left, right = node.this, node.expression
+            if _column(left) is not None and _literal(right) is not None:
+                result.append((node, _parameter(node, 'right', _literal(right), len(result),
+                                                 'comparison', left, symbol, statement)))
+            elif _column(right) is not None and _literal(left) is not None:
+                result.append((node, _parameter(node, 'left', _literal(left), len(result),
+                                                 'comparison', right, symbol, statement)))
     for limit in statement.find_all(exp.Limit):
-
-        literal = _get_literal_value(
-            limit.expression
-        )
-
-        if literal is None:
-            continue
-
-        if literal["value_type"] != "integer":
-            continue
-
-        if literal["value"] < 0:
-            continue
-
-        parameter = {
-            "id": len(editable_nodes),
-            "type": "limit",
-            "column": None,
-            "operator": None,
-            "value": literal["value"],
-            "value_type": "integer",
-            "literal_side": None,
-        }
-
-        editable_nodes.append((limit, parameter))
-
-    return editable_nodes
+        lit = _literal(limit.expression)
+        if lit and lit[1] == 'integer' and lit[0] >= 0:
+            result.append((limit, _parameter(limit, 'expression', lit, len(result),
+                                             'limit', None, 'LIMIT', statement)))
+    return result
 
 
-def extract_parameters(sql: str):
-    """
-    Extract parameters that can be modified visually.
-
-    Example output:
-
-    [
-        {
-            "id": 0,
-            "type": "comparison",
-            "column": "p.year_of_birth",
-            "operator": "<",
-            "value": 1980,
-            "value_type": "integer",
-            "literal_side": "right",
-        },
-        {
-            "id": 1,
-            "type": "limit",
-            "column": None,
-            "operator": None,
-            "value": 100,
-            "value_type": "integer",
-            "literal_side": None,
-        },
-    ]
-    """
-
-    statement = _parse_sql(sql)
-
-    editable_nodes = _collect_editable_nodes(statement)
-
-    return [
-        parameter
-        for _, parameter in editable_nodes
-    ]
+def extract_parameters(sql):
+    return [p for _, p in _nodes(_parse(sql))]
 
 
-def update_parameter(sql: str, parameter_id: int, new_value):
-    """
-    Update one editable parameter in a SQL query.
+def _new_literal(value, kind, old_node=None):
+    if kind == 'boolean':
+        if not isinstance(value, bool):
+            raise ValueError('Expected boolean')
+        return exp.Boolean(this=value)
+    if kind == 'integer':
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError('Expected integer')
+        return exp.Literal.number(value) if value >= 0 else exp.Neg(this=exp.Literal.number(-value))
+    if kind == 'float':
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)):
+            raise ValueError('Expected finite number')
+        return exp.Literal.number(str(value)) if value >= 0 else exp.Neg(this=exp.Literal.number(str(-value)))
+    if kind == 'date':
+        if isinstance(value, datetime.date):
+            value = value.isoformat()
+        try:
+            datetime.date.fromisoformat(str(value))
+        except ValueError as exc:
+            raise ValueError('Expected ISO date') from exc
+        if isinstance(old_node, exp.Cast):
+            copied = old_node.copy()
+            copied.set('this', exp.Literal.string(str(value)))
+            return copied
+        return exp.Literal.string(str(value))
+    if kind == 'string':
+        if not isinstance(value, str):
+            raise ValueError('Expected text')
+        return exp.Literal.string(value)
+    raise ValueError(f'Unsupported type: {kind}')
 
-    The original query is parsed into an AST.
-    Only the selected literal is replaced.
 
-    All other expressions remain structurally unchanged.
-
-    Args:
-        sql:
-            Current PostgreSQL SQL query.
-
-        parameter_id:
-            ID returned by extract_parameters().
-
-        new_value:
-            Replacement value.
-
-    Returns:
-        Updated SQL query as a string.
-    """
-
-    statement = _parse_sql(sql)
-
-    editable_nodes = _collect_editable_nodes(statement)
-
-    if (
-        not isinstance(parameter_id, int)
-        or isinstance(parameter_id, bool)
-        or parameter_id < 0
-        or parameter_id >= len(editable_nodes)
-    ):
-        raise ValueError("Invalid parameter ID.")
-
-    node, parameter = editable_nodes[parameter_id]
-
-    value_type = parameter["value_type"]
-
-    new_literal = _create_literal(
-        new_value,
-        value_type,
-    )
-
-    # Update a comparison literal.
-    if parameter["type"] == "comparison":
-
-        if parameter["literal_side"] == "right":
-            node.set("expression", new_literal)
-
-        else:
-            node.set("this", new_literal)
-
-    # Update a LIMIT literal.
-    elif parameter["type"] == "limit":
-        if (isinstance(new_value, bool) or not isinstance(new_value, int) or new_value < 1):
-            raise ValueError("LIMIT must be a positive integer greater than zero.")
-        node.set("expression", exp.Literal.number(new_value))
-
+def update_parameter(sql, parameter_id, new_value):
+    statement = _parse(sql)
+    nodes = _nodes(statement)
+    if isinstance(parameter_id, bool) or not isinstance(parameter_id, int) or not 0 <= parameter_id < len(nodes):
+        raise ValueError('Invalid parameter ID')
+    node, parameter = nodes[parameter_id]
+    side = parameter['literal_side']
+    old = node.args.get({'left': 'this', 'right': 'expression'}.get(side, side))
+    literal = _new_literal(new_value, parameter['value_type'], old)
+    if parameter['type'] == 'limit':
+        if not isinstance(new_value, int) or isinstance(new_value, bool) or new_value < 1:
+            raise ValueError('LIMIT must be positive')
+        node.set('expression', literal)
+    elif parameter['type'] in ('between_lower', 'between_upper'):
+        other_side = 'high' if side == 'low' else 'low'
+        other = _literal(node.args.get(other_side))
+        if other is not None and parameter['value_type'] in ('integer', 'float', 'date'):
+            a, b = (new_value, other[0]) if side == 'low' else (other[0], new_value)
+            if a > b:
+                raise ValueError('The lower bound cannot exceed the upper bound')
+        node.set(side, literal)
+    elif parameter['type'] == 'comparison':
+        node.set('expression' if side == 'right' else 'this', literal)
     else:
-        raise ValueError("Unsupported parameter type.")
-
-    return statement.sql(dialect="postgres")
+        raise ValueError('Unsupported parameter')
+    return statement.sql(dialect='postgres')

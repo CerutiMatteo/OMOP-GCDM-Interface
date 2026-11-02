@@ -19,6 +19,15 @@ from src.databaseExplorer import render_database_explorer
 
 #INITIALIZATION
 
+# to hide the steamlit default menu
+st.markdown("""
+    <style>
+        #MainMenu {
+            visibility: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Configure the Streamlit page.
 st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
 

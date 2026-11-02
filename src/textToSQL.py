@@ -172,6 +172,35 @@ def generate_sql(question, on_retry=None):
     Do not invent tables, columns, or relationships.
     Do not generate INSERT, UPDATE, DELETE, DROP, or other modifying statements.
     
+    OMOP CONCEPT FILTERING RULES:
+
+    When filtering records by OMOP clinical or demographic concepts,
+    prefer comparisons using concept_id columns rather than
+    comparisons using concept_name or concept_code.
+    For example:
+    - person.gender_concept_id
+    - person.race_concept_id
+    - person.ethnicity_concept_id
+    - visit_occurrence.visit_concept_id
+    - condition_occurrence.condition_concept_id
+    - measurement.measurement_concept_id
+    
+    When a valid concept ID is available, use it directly in the appropriate concept_id column.
+    Avoid unnecessary JOIN operations with the concept table when the concept ID is already known.
+    Never invent concept IDs.
+    
+    Use only concept IDs that are explicitly provided in the
+    OMOP vocabulary context or otherwise verified against
+    the database.
+
+    If the concept ID cannot be determined reliably,
+    do not guess it.
+
+    JOIN the concept table when necessary for retrieving
+    concept metadata or answering questions about concepts.
+
+    Preserve the exact clinical meaning of the user's question.
+    
     OMOP SCHEMA SEMANTICS:
 
     In the OMOP Common Data Model, the person table
