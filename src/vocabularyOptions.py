@@ -86,7 +86,7 @@ def list_field_concepts(
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def search_standard_concepts(term: str, domain: str, limit: int = 30):
+def search_standard_concepts(term: str, domain: str, limit: int = 1000):
     term = term.strip()
     if len(term) < 2:
         return {}

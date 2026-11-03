@@ -11,6 +11,7 @@ def visualize_query_structure(query_analysis: dict) -> Digraph:
     tables = query_analysis.get("tables", [])
     columns = query_analysis.get("columns", [])
     join_columns = query_analysis.get("join_columns", [])
+    subquery_columns = query_analysis.get("subquery_columns", [])
     selected_columns = {
         (col["alias"], col["column"])
         for col in query_analysis.get("selected_columns", [])
@@ -25,7 +26,7 @@ def visualize_query_structure(query_analysis: dict) -> Digraph:
     for column in columns:
         include_column(column["alias"], column["column"])
 
-    for relationship in join_columns:
+    for relationship in join_columns + subquery_columns:
         left = (relationship["left_alias"], relationship["left_column"])
         right = (relationship["right_alias"], relationship["right_column"])
         joined_columns.update((left, right))
@@ -74,11 +75,28 @@ def visualize_query_structure(query_analysis: dict) -> Digraph:
         rows.append('</TABLE>')
         dot.node(node_ids[alias], label='<'+''.join(rows)+'>', shape='plain')
 
+
+    # Draw explicit JOIN relationships.
     for relationship in join_columns:
         left = (relationship["left_alias"], relationship["left_column"])
         right = (relationship["right_alias"], relationship["right_column"])
+
         if left not in ports or right not in ports:
             continue
+
+        dot.edge(
+            f'{node_ids[left[0]]}:{ports[left]}:e',
+            f'{node_ids[right[0]]}:{ports[right]}:w',
+        )
+
+    # Draw subquery relationships using the same style as JOINs.
+    for relationship in subquery_columns:
+        left = (relationship["left_alias"], relationship["left_column"])
+        right = (relationship["right_alias"], relationship["right_column"])
+
+        if left not in ports or right not in ports:
+            continue
+
         dot.edge(
             f'{node_ids[left[0]]}:{ports[left]}:e',
             f'{node_ids[right[0]]}:{ports[right]}:w',

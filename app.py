@@ -13,6 +13,7 @@ from src.historyManager import load_history, save_history, export_history, impor
 from src.configManager import get_supported_tables
 from src.configManager import get_next_query_id, increment_next_query_id
 from src.visualQueryComponents import render_visual_editor
+from src.visualQueryEditor import get_clinical_conditions, set_include_descendants
 from src.queryAnalyzer import analyze_query
 from src.schemaVisualizer import visualize_query_structure
 from src.databaseExplorer import render_database_explorer
@@ -23,11 +24,27 @@ print("DEBUG: Imports completed", flush=True)
 
 # to hide the steamlit default menu
 st.markdown("""
-    <style>
-        #MainMenu {
-            visibility: hidden;
-        }
-    </style>
+<style>
+    #MainMenu {
+        visibility: hidden;
+    }
+    
+     /* Hide Streamlit toolbar (Deploy and other controls) */
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    /* Hide Streamlit status widget (Stop / running indicator) */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* Hide Streamlit main menu */
+    #MainMenu {
+        visibility: hidden !important;
+    }
+
+</style>
 """, unsafe_allow_html=True)
 
 # Configure the Streamlit page.
@@ -101,6 +118,48 @@ st.markdown("""
         stroke: #2196F3 !important;
     }
 
+</style>
+""", unsafe_allow_html=True)
+
+# Customize the Clinical Condition Subclasses panel.
+st.markdown("""
+<style>
+    .st-key-subclasses_panel {
+        background-color: #171717 !important;
+        border: 1px solid #333333 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+    }
+
+    .st-key-subclasses_panel h3,
+    .st-key-subclasses_panel p,
+    .st-key-subclasses_panel label,
+    .st-key-subclasses_panel [data-testid="stMarkdownContainer"] {
+        color: #F5F5F5 !important;
+        -webkit-text-fill-color: #F5F5F5 !important;
+    }
+
+    .st-key-subclasses_panel [data-testid="stRadio"] {
+        color: #F5F5F5 !important;
+    }
+
+    .st-key-subclasses_panel .st-key-confirm_subclasses button {
+        background-color: #1976D2 !important;
+        border: 1px solid #1976D2 !important;
+        color: #FFFFFF !important;
+    }
+    
+    .st-key-subclasses_panel .st-key-confirm_subclasses button:hover {
+        background-color: #1565C0 !important;
+        border-color: #1565C0 !important;
+        color: #FFFFFF !important;
+    }
+    
+    .st-key-subclasses_panel .st-key-confirm_subclasses button p {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+    
 </style>
 """, unsafe_allow_html=True)
 
@@ -344,47 +403,17 @@ if page == "💬 Query Interface":
                         # Save the question associated with the generated SQL.
                         st.session_state["generated_question"] = question
 
-                        if st.session_state.get("developer_mode", False):
-                            st.rerun()
+                        # Check whether the generated query contains supported
+                        # clinical conditions.
+                        clinical_conditions = get_clinical_conditions(sql)
 
-                        else:
+                        # Ask the user once per generated query, regardless
+                        # of Programmer Mode.
+                        st.session_state["subclasses_confirmed"] = not bool(clinical_conditions)
+                        st.session_state["include_descendants"] = False
 
-                            # Automatically execute the query in standard mode.
-                            try:
-                                with st.spinner("Executing SQL query..."):
-                                    # Open the read-only PostgreSQL connection.
-                                    with connect_db() as conn:
-                                        df = execute_sql(sql, conn, max_rows=st.session_state.get("max_rows", 1000))
-
-                                    # Save the query and its results to the history.
-                                    query_id = get_next_query_id()
-
-                                    st.session_state["query_history"].append({
-                                        "id": query_id,
-                                        "question": question,
-                                        "sql": sql,
-                                        "results": df.copy()
-                                    })
-
-                                    save_history(st.session_state["query_history"])
-                                    increment_next_query_id()
-
-                                    # Clear the pending query.
-                                    st.session_state.pop("generated_sql", None)
-                                    st.session_state.pop("generated_question", None)
-
-                                    # Expand the latest result.
-                                    st.session_state["collapse_history"] = False
-                                    st.session_state["history_version"] = (st.session_state.get("history_version", 0) + 1)
-
-                                    # Prepare a new empty question input.
-                                    st.session_state["question_number"] += 1
-
-                                # Refresh the page to display the results.
-                                st.rerun()
-
-                            except Exception as e:
-                                st.error(f"Query execution failed: {e}")
+                        # Render the next step after generation.
+                        st.rerun()
 
                 except Exception as e:
                     # Clear the overload message after failure.
@@ -406,8 +435,103 @@ if page == "💬 Query Interface":
         else:
             st.warning("Please enter a question.")
 
+    # Ask whether to include clinical subclasses before
+    # allowing the query to be executed or edited.
+    if (
+            "generated_sql" in st.session_state
+            and not st.session_state.get("subclasses_confirmed", True)
+    ):
+        with st.container(border=True, key="subclasses_panel"):
+            st.subheader("Clinical Condition Subclasses")
+
+            st.write("Do you want to include subclasses of the clinical conditions in your query?")
+
+            st.radio(
+                "Include subclasses",
+                options=[False, True],
+                format_func=lambda value: "Yes" if value else "No",
+                key="subclasses_choice",
+                horizontal=True,
+            )
+
+            if st.button(
+                    "Confirm Selection",
+                    type="primary",
+                    key="confirm_subclasses",
+            ):
+                try:
+                    enabled = st.session_state["subclasses_choice"]
+
+                    updated_sql = set_include_descendants(
+                        st.session_state["editable_sql"],
+                        enabled
+                    )
+
+                    st.session_state["editable_sql"] = updated_sql
+
+                    # Synchronize the Visual Editor checkbox.
+                    st.session_state["include_descendants"] = enabled
+
+                    st.session_state["subclasses_confirmed"] = True
+                    st.session_state["visual_editor_version"] += 1
+
+                    st.rerun()
+
+                except ValueError as exc:
+                    st.error(f"Unable to update clinical conditions: {exc}")
+
+        # Execute confirmed queries automatically in standard mode.
+        if (
+                not st.session_state.get("developer_mode", False)
+                and "generated_sql" in st.session_state
+                and st.session_state.get("subclasses_confirmed", True)
+        ):
+            try:
+                with st.spinner("Executing SQL query..."):
+                    sql = st.session_state["editable_sql"]
+
+                    with connect_db() as conn:
+                        df = execute_sql(
+                            sql,
+                            conn,
+                            max_rows=st.session_state.get("max_rows", 1000),
+                        )
+
+                    query_id = get_next_query_id()
+
+                    st.session_state["query_history"].append({
+                        "id": query_id,
+                        "question": st.session_state["generated_question"],
+                        "sql": sql,
+                        "results": df.copy(),
+                    })
+
+                    save_history(st.session_state["query_history"])
+                    increment_next_query_id()
+
+                    st.session_state.pop("generated_sql", None)
+                    st.session_state.pop("generated_question", None)
+                    st.session_state.pop("editable_sql", None)
+                    st.session_state.pop("subclasses_confirmed", None)
+                    st.session_state.pop("include_descendants", None)
+
+                    st.session_state["collapse_history"] = False
+                    st.session_state["history_version"] = (
+                            st.session_state.get("history_version", 0) + 1
+                    )
+                    st.session_state["question_number"] += 1
+
+                st.rerun()
+
+            except Exception as exc:
+                st.error(f"Query execution failed: {exc}")
+
     # Display the query editors only in Programmer Mode.
-    if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):
+    if (
+        st.session_state.get("developer_mode", False)
+        and "generated_sql" in st.session_state
+        and st.session_state.get("subclasses_confirmed", True)
+    ):
 
         with st.container(border=True, key="query_editor_panel"):
 
@@ -433,6 +557,17 @@ if page == "💬 Query Interface":
                     editor_mode == "Visual Editor"
                     and previous_mode != "Visual Editor"
             ):
+                # Synchronize the checkbox with the current SQL.
+                conditions = get_clinical_conditions(
+                    st.session_state["editable_sql"]
+                )
+
+                if conditions:
+                    st.session_state["include_descendants"] = all(
+                        condition["include_descendants"]
+                        for condition in conditions
+                    )
+
                 st.session_state["visual_editor_version"] += 1
 
             st.session_state["previous_query_editor_mode"] = editor_mode
@@ -452,7 +587,11 @@ if page == "💬 Query Interface":
                 )
 
     # Execute the SQL query generated by Gemini.
-    if (st.session_state.get("developer_mode", False) and "generated_sql" in st.session_state):
+    if (
+            st.session_state.get("developer_mode", False)
+            and "generated_sql" in st.session_state
+            and st.session_state.get("subclasses_confirmed", True)
+    ):
         if st.button("Run Query", key="run_generated_query"):
             try:
                 with st.spinner("Executing SQL query..."):
@@ -487,6 +626,8 @@ if page == "💬 Query Interface":
                     st.session_state.pop("generated_sql", None)
                     st.session_state.pop("generated_question", None)
                     st.session_state.pop("editable_sql", None)
+                    st.session_state.pop("subclasses_confirmed", None)
+                    st.session_state.pop("include_descendants", None)
 
                     # Expand the latest result after successful execution.
                     st.session_state["collapse_history"] = False

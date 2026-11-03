@@ -23,6 +23,7 @@ def analyze_query(sql: str) -> dict:
     columns = []
     joins = []
     join_columns = []
+    subquery_columns = []
     selected_columns = []
 
     for table in statement.find_all(exp.Table):
@@ -44,7 +45,31 @@ def analyze_query(sql: str) -> dict:
         return list(table_metadata["columns"].keys())
 
     def resolve_alias(column):
-        return column.table or single_table_alias
+        if column.table:
+            return column.table
+
+        # Resolve unqualified columns within their own SELECT scope.
+        select = column.find_ancestor(exp.Select)
+
+        if select is not None:
+            local_tables = []
+
+            from_clause = select.args.get("from_")
+            if from_clause is not None:
+                local_tables.extend(from_clause.find_all(exp.Table))
+
+            for join in select.args.get("joins") or []:
+                if isinstance(join.this, exp.Table):
+                    local_tables.append(join.this)
+
+            local_aliases = list(dict.fromkeys(
+                table.alias_or_name for table in local_tables
+            ))
+
+            if len(local_aliases) == 1:
+                return local_aliases[0]
+
+        return single_table_alias
 
     def add_column(column):
         alias = resolve_alias(column)
@@ -57,6 +82,10 @@ def analyze_query(sql: str) -> dict:
             columns.append(info)
 
     for column in statement.find_all(exp.Column):
+        # Ignore the wildcard p.* because it is not a physical column.
+        if isinstance(column.this, exp.Star):
+            continue
+
         add_column(column)
 
     # SELECT expressions may contain nested functions, arithmetic and aliases.
@@ -168,10 +197,60 @@ def analyze_query(sql: str) -> dict:
             if relationship not in join_columns:
                 join_columns.append(relationship)
 
+    # Identify relationships introduced by IN subqueries.
+    for in_expression in statement.find_all(exp.In):
+        outer_column = in_expression.this
+        query = in_expression.args.get("query")
+
+        if not isinstance(outer_column, exp.Column):
+            continue
+
+        if isinstance(query, exp.Subquery):
+            subquery = query.this
+        else:
+            subquery = query
+
+        if not isinstance(subquery, exp.Select):
+            continue
+
+        if len(subquery.expressions) != 1:
+            continue
+
+        inner_column = subquery.expressions[0]
+
+        if not isinstance(inner_column, exp.Column):
+            continue
+
+        inner_from = subquery.args.get("from_")
+
+        if inner_from is None or not isinstance(inner_from.this, exp.Table):
+            continue
+
+        if subquery.args.get("joins"):
+            continue
+
+        inner_table = inner_from.this
+        inner_alias = inner_table.alias_or_name
+        outer_alias = resolve_alias(outer_column)
+
+        if outer_alias not in aliases or inner_alias not in aliases:
+            continue
+
+        relationship = {
+            "left_alias": outer_alias,
+            "left_column": outer_column.name,
+            "right_alias": inner_alias,
+            "right_column": inner_column.name,
+        }
+
+        if relationship not in subquery_columns:
+            subquery_columns.append(relationship)
+
     return {
         "tables": tables,
         "columns": columns,
         "joins": joins,
         "join_columns": join_columns,
+        "subquery_columns": subquery_columns,
         "selected_columns": selected_columns,
     }
