@@ -1,0 +1,7 @@
+# Runtime dependencies for OMOP-GDM-Interface
+streamlit
+psycopg[binary]
+pandas
+google-genai
+sqlglot
+graphviz

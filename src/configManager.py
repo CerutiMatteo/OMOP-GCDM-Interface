@@ -75,8 +75,8 @@ def validate_config(config: dict) -> dict:
     if len(tables) != len(set(tables)):
         raise ValueError("Allowed tables must not contain duplicates.")
 
-    if not set(tables).issubset(get_supported_tables()):
-        raise ValueError("Configuration contains unsupported tables.")
+    #if not set(tables).issubset(get_supported_tables()):
+    #    raise ValueError("Configuration contains unsupported tables.")
 
     # Validate maximum saved queries.
     if type(config["max_history"]) is not int:

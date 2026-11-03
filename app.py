@@ -17,7 +17,9 @@ from src.queryAnalyzer import analyze_query
 from src.schemaVisualizer import visualize_query_structure
 from src.databaseExplorer import render_database_explorer
 
-#INITIALIZATION
+print("DEBUG: Imports completed", flush=True)
+
+# INITIALIZATION
 
 # to hide the steamlit default menu
 st.markdown("""
@@ -83,6 +85,20 @@ st.markdown("""
     .st-key-confirm_delete_single_query button svg {
         color: #FFFFFF !important;
         -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    /* Edit Title button: blue text and icon on hover */
+    div[class*="st-key-edit_query_title_"] button:hover {
+        color: #2196F3 !important;
+        border-color: #2196F3 !important;
+    }
+
+    div[class*="st-key-edit_query_title_"] button:hover p,
+    div[class*="st-key-edit_query_title_"] button:hover span,
+    div[class*="st-key-edit_query_title_"] button:hover svg {
+        color: #2196F3 !important;
+        -webkit-text-fill-color: #2196F3 !important;
+        stroke: #2196F3 !important;
     }
 
 </style>
@@ -165,13 +181,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+print("DEBUG: Starting configuration loading", flush=True)
+
 # Load the saved application configuration.
 if "config" not in st.session_state:
+    print("DEBUG: Calling load_config()", flush=True)
     st.session_state["config"] = load_config()
+
+print("DEBUG: Configuration loaded", flush=True)
 
 # Restore the saved query history.
 if "query_history" not in st.session_state:
+    print("DEBUG: Calling load_history()", flush=True)
     st.session_state["query_history"] = load_history()
+
+print("DEBUG: History loaded", flush=True)
+
+print("DEBUG: History loaded", flush=True)
 
 # Assign IDs to queries that do not have one.
 history = st.session_state["query_history"]
@@ -234,6 +260,8 @@ with st.sidebar:
 
 # Read the PostgreSQL connection settings from Streamlit secrets.
 db_config = st.secrets["connections"]["omop"]
+
+print("DEBUG: Database configuration loaded", flush=True)
 
 # Create a read-only connection to the PostgreSQL database.
 def connect_db():
@@ -474,6 +502,69 @@ if page == "💬 Query Interface":
                 st.error(f"Query execution failed: {e}")
 
 
+    @st.dialog("Edit Query Title")
+    def edit_query_title(query_id):
+
+        # Find the query using its permanent ID.
+        query = next(
+            (
+                item
+                for item in st.session_state["query_history"]
+                if item["id"] == query_id
+            ),
+            None
+        )
+
+        if query is None:
+            st.error("Query not found.")
+            return
+
+        # Use the original question when no custom title exists.
+        current_title = query.get("title") or query["question"]
+
+        new_title = st.text_input(
+            "Query Title",
+            value=current_title,
+            key=f"query_title_input_{query_id}"
+        )
+
+        col_cancel, col_save = st.columns(2)
+
+        with col_cancel:
+            if st.button("Cancel", use_container_width=True):
+                st.rerun()
+
+        with col_save:
+            if st.button(
+                "Save Title",
+                icon=":material/save:",
+                type="primary",
+                use_container_width=True
+            ):
+
+                new_title = new_title.strip()
+
+                if not new_title:
+                    st.error("The query title cannot be empty.")
+                    return
+
+                # Save the custom title without changing the original question.
+                updated_history = [
+                    {**item, "title": new_title}
+                    if item["id"] == query_id
+                    else item.copy()
+                    for item in st.session_state["query_history"]
+                ]
+
+                # Persist the updated history.
+                save_history(updated_history)
+
+                # Update the session only after successful persistence.
+                st.session_state["query_history"] = updated_history
+
+                st.rerun()
+
+
     @st.dialog("Delete Query")
     def confirm_delete_query(index):
 
@@ -642,7 +733,7 @@ if page == "💬 Query Interface":
                 except (ValueError, UnicodeError, OSError, TypeError) as e:
                     st.error(f"Unable to load history: {e}")
 
-
+   
     if "history_export_success" in st.session_state:
         st.success(st.session_state.pop("history_export_success"))
 
@@ -666,11 +757,14 @@ if page == "💬 Query Interface":
 
         for index, item in enumerate(st.session_state["query_history"]):
 
+            # Use the custom title when available.
+            query_title = item.get("title") or item["question"]
+
             # Expand the latest result only when no new SQL is pending.
             is_latest = index == len(st.session_state["query_history"]) - 1
 
             with st.expander(
-                    f"Question {item['id']} — {item['question']}",
+                    f"Question {item['id']} — {query_title}",
                     expanded=(
                             is_latest
                             and not st.session_state["collapse_history"]
@@ -679,16 +773,28 @@ if page == "💬 Query Interface":
                     key=f"history_{item['id']}"
             ):
 
-                # Header with title and Delete button.
-                col_title, col_delete = st.columns(
-                    [5, 1],
+                # Header with title, Edit Title and Delete buttons.
+                col_title, col_edit, col_delete = st.columns(
+                    [4, 1, 1],
                     vertical_alignment="center"
                 )
+
                 with col_title:
                     if st.session_state.get("developer_mode", False):
                         st.subheader("Generated Query")
                     else:
                         st.subheader("Query Results")
+
+                with col_edit:
+                    if st.button(
+                            "Edit Title",
+                            icon=":material/edit:",
+                            key=f"edit_query_title_{item['id']}",
+                            type="tertiary",
+                            use_container_width=True
+                    ):
+                        edit_query_title(item["id"])
+
                 with col_delete:
                     if st.button(
                             "Delete",
@@ -1034,24 +1140,36 @@ elif page == "🛠️ Diagnostics":
         except Exception as e:
             st.error(f"Permission check failed: {e}")
 
-    # Check permissions on all authorized tables.
-    if st.button("Check Authorized Tables"):
+    # Check permissions on all tables in the CDM schema.
+    st.subheader("Table Permissions")
 
-        tables = [
-            "person",
-            "specimen",
-            "variant_occurrence",
-            "target_gene",
-            "variant_annotation",
-        ]
+    st.write(
+        "Check the current database user's permissions "
+        "on all tables in the CDM schema."
+    )
 
-        results = []
+    if st.button("Check Table Permissions"):
 
         try:
             with connect_db() as conn:
                 with conn.cursor() as cur:
+
+                    # Retrieve all tables from the CDM schema.
+                    cur.execute("""
+                        SELECT table_name
+                        FROM information_schema.tables
+                        WHERE table_schema = 'cdm'
+                          AND table_type = 'BASE TABLE'
+                        ORDER BY table_name;
+                    """)
+
+                    tables = [row[0] for row in cur.fetchall()]
+
+                    results = []
+
+                    # Check permissions for each table.
                     for table in tables:
-                        # Check read and write privileges.
+
                         cur.execute(
                             """
                             SELECT
@@ -1081,10 +1199,20 @@ elif page == "🛠️ Diagnostics":
                             "DELETE": permissions[3],
                         })
 
-            st.dataframe(
-                pd.DataFrame(results),
-                width="stretch"
-            )
+            if results:
 
-        except Exception as e:
-            st.error(f"Permission check failed: {e}")
+                st.success(
+                    f"Permissions retrieved for {len(results)} tables."
+                )
+
+                st.dataframe(
+                    pd.DataFrame(results),
+                    width="stretch",
+                    hide_index=True
+                )
+
+            else:
+                st.warning("No tables found in the CDM schema.")
+
+        except psycopg.Error as e:
+            st.error(f"Unable to check table permissions: {e}")
