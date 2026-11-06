@@ -34,6 +34,8 @@ def save_history(history: list, config=None) -> None:
         df = item["results"]
 
         serializable_history.append({
+            "id": item.get("id"),
+            "title": item.get("title"),
             "question": item["question"],
             "sql": item["sql"],
             "columns": list(df.columns),
@@ -89,6 +91,8 @@ def load_history(config=None) -> list:
         )
 
         history.append({
+            **({"id": item["id"]} if item.get("id") is not None else {}),
+            "title": item.get("title"),
             "question": item["question"],
             "sql": item["sql"],
             "results": df
@@ -147,6 +151,8 @@ def export_history(history: list, filename: str, directory: str) -> Path:
         df = item["results"]
 
         serializable_history.append({
+            "id": item.get("id"),
+            "title": item.get("title"),
             "question": item["question"],
             "sql": item["sql"],
             "columns": list(df.columns),
@@ -199,6 +205,8 @@ def import_history(file_content: bytes) -> list:
         )
 
         history.append({
+            **({"id": item["id"]} if item.get("id") is not None else {}),
+            "title": item.get("title"),
             "question": item["question"],
             "sql": item["sql"],
             "results": df

@@ -131,7 +131,17 @@ def _nodes(statement):
                 )
 
                 if clinical_condition is not None:
-                    concept_id = clinical_condition["concept_id"]
+
+                    concept_ids = clinical_condition.get(
+                        "concept_ids",
+                        [clinical_condition["concept_id"]]
+                        if "concept_id" in clinical_condition else []
+                    )
+
+                    if len(concept_ids) != 1:
+                        continue
+
+                    concept_id = concept_ids[0]
                     column = clinical_condition["column"]
 
                     result.append((
@@ -295,6 +305,25 @@ def _clinical_condition_nodes(statement):
             ):
                 continue
 
+            # Recognize explicit lists of clinical concept IDs.
+            values = node.args.get("expressions") or []
+
+            if values and all(
+                (literal := _literal(value)) is not None
+                and literal[1] == "integer"
+                for value in values
+            ):
+                result.append({
+                    "node": node,
+                    "column": column.copy(),
+                    "concept_ids": [
+                        _literal(value)[0]
+                        for value in values
+                    ],
+                    "include_descendants": False,
+                })
+                continue
+
             query = node.args.get("query")
 
             if not isinstance(query, exp.Subquery):
@@ -331,24 +360,49 @@ def _clinical_condition_nodes(statement):
 
             condition = where.this
 
-            if not isinstance(condition, exp.EQ):
-                continue
+            ancestor_ids = []
 
-            ancestor_column = _column(condition.this)
-            ancestor_literal = _literal(condition.expression)
+            if isinstance(condition, exp.EQ):
 
-            if (
-                ancestor_column is None
-                or ancestor_column.name.lower() != "ancestor_concept_id"
-                or ancestor_literal is None
-                or ancestor_literal[1] != "integer"
-            ):
+                ancestor_column = _column(condition.this)
+                ancestor_literal = _literal(condition.expression)
+
+                if (
+                    ancestor_column is not None
+                    and ancestor_column.name.lower() == "ancestor_concept_id"
+                    and ancestor_literal is not None
+                    and ancestor_literal[1] == "integer"
+                ):
+                    ancestor_ids = [ancestor_literal[0]]
+
+            elif isinstance(condition, exp.In):
+
+                ancestor_column = _column(condition.this)
+
+                if (
+                    ancestor_column is not None
+                    and ancestor_column.name.lower() == "ancestor_concept_id"
+                ):
+
+                    values = condition.args.get("expressions") or []
+
+                    if values and all(
+                        _literal(value) is not None
+                        and _literal(value)[1] == "integer"
+                        for value in values
+                    ):
+                        ancestor_ids = [
+                            _literal(value)[0]
+                            for value in values
+                        ]
+
+            if not ancestor_ids:
                 continue
 
             result.append({
                 "node": node,
                 "column": column.copy(),
-                "concept_id": ancestor_literal[0],
+                "concept_ids": ancestor_ids,
                 "include_descendants": True,
             })
 
@@ -363,7 +417,11 @@ def get_clinical_conditions(sql):
 
     return [
         {
-            "concept_id": item["concept_id"],
+            "concept_ids": (
+                item["concept_ids"]
+                if "concept_ids" in item
+                else [item["concept_id"]]
+            ),
             "include_descendants": item["include_descendants"],
         }
         for item in _clinical_condition_nodes(statement)
@@ -372,9 +430,10 @@ def get_clinical_conditions(sql):
 
 def set_include_descendants(sql, enabled):
     """
-    Globally enable or disable descendants for all supported
-    clinical condition filters.
+    Enable or disable descendant concepts for clinical conditions.
+    Supports both single concept IDs and lists of concept IDs.
     """
+
     if not isinstance(enabled, bool):
         raise ValueError("enabled must be a boolean")
 
@@ -382,17 +441,26 @@ def set_include_descendants(sql, enabled):
     conditions = _clinical_condition_nodes(statement)
 
     for item in conditions:
+
         node = item["node"]
         column = item["column"]
-        concept_id = item["concept_id"]
+
+        concept_ids = (
+            item["concept_ids"]
+            if "concept_ids" in item
+            else [item["concept_id"]]
+        )
 
         if enabled:
+
+            ids = ", ".join(str(cid) for cid in concept_ids)
+
             replacement = sqlglot.parse_one(
                 f"""
                 condition_concept_id IN (
                     SELECT descendant_concept_id
                     FROM cdm.concept_ancestor
-                    WHERE ancestor_concept_id = {concept_id}
+                    WHERE ancestor_concept_id IN ({ids})
                 )
                 """,
                 read="postgres",
@@ -401,10 +469,23 @@ def set_include_descendants(sql, enabled):
             replacement.set("this", column)
 
         else:
-            replacement = exp.EQ(
-                this=column,
-                expression=exp.Literal.number(concept_id),
-            )
+
+            if len(concept_ids) == 1:
+
+                replacement = exp.EQ(
+                    this=column,
+                    expression=exp.Literal.number(concept_ids[0]),
+                )
+
+            else:
+
+                replacement = exp.In(
+                    this=column,
+                    expressions=[
+                        exp.Literal.number(cid)
+                        for cid in concept_ids
+                    ],
+                )
 
         node.replace(replacement)
 

@@ -15,6 +15,12 @@ def search_concepts(term: str, limit: int = 20) -> list[dict]:
         raise ValueError("Limit must be between 1 and 100.")
 
     term = term.strip()
+
+    normalized_code = term
+
+    if term.upper().startswith("HP:"):
+        normalized_code = "HP_" + term[3:]
+
     db_config = st.secrets["connections"]["omop"]
 
     with psycopg.connect(
@@ -41,6 +47,7 @@ def search_concepts(term: str, limit: int = 20) -> list[dict]:
                     c.invalid_reason IS NULL
                     AND (
                         c.concept_name ILIKE %s
+                        OR c.concept_code = %s
                         OR EXISTS (
                             SELECT 1
                             FROM cdm.concept_synonym AS cs
@@ -51,8 +58,11 @@ def search_concepts(term: str, limit: int = 20) -> list[dict]:
                 ORDER BY
                     CASE
                         WHEN LOWER(c.concept_name) = LOWER(%s) THEN 0
-                        WHEN c.standard_concept = 'S' THEN 1
-                        ELSE 2
+                        ELSE 1
+                    END,
+                    CASE
+                        WHEN c.standard_concept = 'S' THEN 0
+                        ELSE 1
                     END,
                     c.concept_name,
                     c.concept_id
@@ -60,6 +70,7 @@ def search_concepts(term: str, limit: int = 20) -> list[dict]:
                 """,
                 (
                     f"%{term}%",
+                    normalized_code,
                     f"%{term}%",
                     term,
                     limit

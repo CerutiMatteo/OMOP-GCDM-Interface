@@ -133,6 +133,7 @@ if __name__ == "__main__":
         "person",
         "specimen",
         "variant_occurrence",
+        "variant_annotation",
         "target_gene",
         "genomic_test",
         "genomic_test_target_gene",

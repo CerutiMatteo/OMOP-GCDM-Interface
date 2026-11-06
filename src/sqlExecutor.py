@@ -26,7 +26,7 @@ def execute_sql(sql: str, connection, max_rows: int = 1000) -> pd.DataFrame:
 
             # Enforce read-only execution and a query timeout.
             cur.execute("SET TRANSACTION READ ONLY")
-            cur.execute("SET LOCAL statement_timeout = '10s'")
+            cur.execute("SET LOCAL statement_timeout = '180s'")
 
             # Execute the validated and limited query.
             cur.execute(limited_sql)
