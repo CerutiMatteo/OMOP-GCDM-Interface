@@ -54,5 +54,5 @@
   ],
   "max_history": 100,
   "history_path": "data/currentHistory.json",
-  "next_query_id": 21
+  "next_query_id": 22
 }

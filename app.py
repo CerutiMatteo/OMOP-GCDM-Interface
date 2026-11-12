@@ -23,33 +23,28 @@ print("DEBUG: Imports completed", flush=True)
 
 # INITIALIZATION
 
-# to hide the steamlit default menu
+# Configure the Streamlit page.
+st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
+
+# Hide Streamlit default menu
 st.markdown("""
 <style>
-    #MainMenu {
-        visibility: hidden;
-    }
-    
-     /* Hide Streamlit toolbar (Deploy and other controls) */
-    [data-testid="stToolbar"] {
-        display: none !important;
-    }
-
-    /* Hide Streamlit status widget (Stop / running indicator) */
-    [data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-
     /* Hide Streamlit main menu */
     #MainMenu {
         visibility: hidden !important;
     }
 
+    /* Hide Deploy button only */
+    [data-testid="stAppDeployButton"] {
+        display: none !important;
+    }
+
+    /* Hide Streamlit status widget */
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
-
-# Configure the Streamlit page.
-st.set_page_config(page_title="OMOP G-CDM Interface", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
 
 # Customize the hover colors of the Query History buttons.
 
