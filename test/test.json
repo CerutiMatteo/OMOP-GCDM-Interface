@@ -1,0 +1,2735 @@
+[
+  {
+    "id": 1,
+    "title": null,
+    "question": "Show me the first 20 genes with HGNC identifier and symbol.",
+    "sql": "SELECT hgnc_id, hgnc_symbol FROM cdm.target_gene LIMIT 20",
+    "columns": [
+      "hgnc_id",
+      "hgnc_symbol"
+    ],
+    "results": [
+      {
+        "hgnc_id": "HGNC:4561",
+        "hgnc_symbol": "GPX1P2"
+      },
+      {
+        "hgnc_id": "HGNC:4554",
+        "hgnc_symbol": "GPX2"
+      },
+      {
+        "hgnc_id": "HGNC:4555",
+        "hgnc_symbol": "GPX3"
+      },
+      {
+        "hgnc_id": "HGNC:4556",
+        "hgnc_symbol": "GPX4"
+      },
+      {
+        "hgnc_id": "HGNC:4557",
+        "hgnc_symbol": "GPX5"
+      },
+      {
+        "hgnc_id": "HGNC:4558",
+        "hgnc_symbol": "GPX6"
+      },
+      {
+        "hgnc_id": "HGNC:4559",
+        "hgnc_symbol": "GPX7"
+      },
+      {
+        "hgnc_id": "HGNC:29305",
+        "hgnc_symbol": "GRAMD1A"
+      },
+      {
+        "hgnc_id": "HGNC:55275",
+        "hgnc_symbol": "GRAMD1A-AS1"
+      },
+      {
+        "hgnc_id": "HGNC:29214",
+        "hgnc_symbol": "GRAMD1B"
+      },
+      {
+        "hgnc_id": "HGNC:25252",
+        "hgnc_symbol": "GRAMD1C"
+      },
+      {
+        "hgnc_id": "HGNC:27287",
+        "hgnc_symbol": "GRAMD2A"
+      },
+      {
+        "hgnc_id": "HGNC:24911",
+        "hgnc_symbol": "GRAMD2B"
+      },
+      {
+        "hgnc_id": "HGNC:41069",
+        "hgnc_symbol": "GRAMD2B-AS1"
+      },
+      {
+        "hgnc_id": "HGNC:29113",
+        "hgnc_symbol": "GRAMD4"
+      },
+      {
+        "hgnc_id": "HGNC:39653",
+        "hgnc_symbol": "GRAMD4P1"
+      },
+      {
+        "hgnc_id": "HGNC:39654",
+        "hgnc_symbol": "GRAMD4P2"
+      },
+      {
+        "hgnc_id": "HGNC:49138",
+        "hgnc_symbol": "GRAMD4P3"
+      },
+      {
+        "hgnc_id": "HGNC:49139",
+        "hgnc_symbol": "GRAMD4P4"
+      },
+      {
+        "hgnc_id": "HGNC:49140",
+        "hgnc_symbol": "GRAMD4P5"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": null,
+    "question": "How many genomic variants are present in the variant_occurrence table?",
+    "sql": "SELECT COUNT(*) FROM cdm.variant_occurrence",
+    "columns": [
+      "count"
+    ],
+    "results": [
+      {
+        "count": 3340118
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": null,
+    "question": "How many genomic variants are present in the variant_occurrence table?",
+    "sql": "SELECT COUNT(*) FROM cdm.variant_occurrence",
+    "columns": [
+      "count"
+    ],
+    "results": [
+      {
+        "count": 3340118
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": null,
+    "question": "What are the 10 most common values for vep_consequence annotations?",
+    "sql": "SELECT value_as_string, COUNT(*) AS annotation_count FROM cdm.variant_annotation WHERE annotation_field = 'vep_consequence' GROUP BY value_as_string ORDER BY annotation_count DESC LIMIT 10",
+    "columns": [
+      "value_as_string",
+      "annotation_count"
+    ],
+    "results": [
+      {
+        "value_as_string": "intron_variant",
+        "annotation_count": 1113498
+      },
+      {
+        "value_as_string": "intergenic_variant",
+        "annotation_count": 984426
+      },
+      {
+        "value_as_string": "downstream_gene_variant",
+        "annotation_count": 366918
+      },
+      {
+        "value_as_string": "intron_variant,non_coding_transcript_variant",
+        "annotation_count": 303642
+      },
+      {
+        "value_as_string": "upstream_gene_variant",
+        "annotation_count": 265716
+      },
+      {
+        "value_as_string": "3_prime_UTR_variant",
+        "annotation_count": 33348
+      },
+      {
+        "value_as_string": "non_coding_transcript_exon_variant",
+        "annotation_count": 16974
+      },
+      {
+        "value_as_string": "synonymous_variant",
+        "annotation_count": 12300
+      },
+      {
+        "value_as_string": "missense_variant",
+        "annotation_count": 11834
+      },
+      {
+        "value_as_string": "5_prime_UTR_variant",
+        "annotation_count": 8652
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": null,
+    "question": " What are the 10 most frequent HPO codes in observations?",
+    "sql": "SELECT observation_source_value, COUNT(*) AS frequency FROM cdm.observation WHERE observation_source_value LIKE 'HP:%' GROUP BY observation_source_value ORDER BY frequency DESC LIMIT 10",
+    "columns": [
+      "observation_source_value",
+      "frequency"
+    ],
+    "results": [
+      {
+        "observation_source_value": "HP:0001319",
+        "frequency": 2
+      },
+      {
+        "observation_source_value": "HP:0003202",
+        "frequency": 2
+      },
+      {
+        "observation_source_value": "HP:0007703",
+        "frequency": 2
+      },
+      {
+        "observation_source_value": "HP:0000467",
+        "frequency": 2
+      },
+      {
+        "observation_source_value": "HP:0005684",
+        "frequency": 2
+      },
+      {
+        "observation_source_value": "HP:0100615",
+        "frequency": 1
+      },
+      {
+        "observation_source_value": "HP:0009050",
+        "frequency": 1
+      },
+      {
+        "observation_source_value": "HP:0002922",
+        "frequency": 1
+      },
+      {
+        "observation_source_value": "HP:0001374",
+        "frequency": 1
+      },
+      {
+        "observation_source_value": "HP:0003560",
+        "frequency": 1
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": null,
+    "question": "How many distinct genes are associated with genomic variants?",
+    "sql": "SELECT COUNT(DISTINCT tg.target_gene_id) FROM cdm.target_gene AS tg JOIN cdm.variant_occurrence AS vo ON (vo.target_gene1_id = tg.target_gene_id OR vo.target_gene2_id = tg.target_gene_id)",
+    "columns": [
+      "count"
+    ],
+    "results": [
+      {
+        "count": 1458
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Show me the patients who have microcephaly. (NO)",
+    "question": "Show me the patients who have microcephaly.",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p WHERE p.person_id IN (SELECT co.person_id FROM cdm.condition_occurrence AS co WHERE co.condition_concept_id IN (606878, 606879) UNION SELECT o.person_id FROM cdm.observation AS o WHERE o.observation_concept_id = 37420814 OR o.observation_source_value = 'HP:0000252')",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": [
+      {
+        "person_id": 3,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2012,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case4_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": null,
+    "question": "Which HPO codes correspond to the microcephaly phenotype in available vocabularies?",
+    "sql": "SELECT DISTINCT concept_code FROM cdm.concept WHERE vocabulary_id = 'HPO' AND (concept_name ILIKE '%microcephaly%' OR concept_code = 'HP:0000252')",
+    "columns": [
+      "concept_code"
+    ],
+    "results": [
+      {
+        "concept_code": "HP_0000252"
+      },
+      {
+        "concept_code": "HP_0000253"
+      },
+      {
+        "concept_code": "HP_0005484"
+      },
+      {
+        "concept_code": "HP_0011451"
+      },
+      {
+        "concept_code": "HP_0040196"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": null,
+    "question": "How many patients have at least two distinct phenotypes recorded?",
+    "sql": "SELECT COUNT(*) FROM (SELECT p.person_id FROM cdm.person AS p JOIN cdm.observation AS o ON p.person_id = o.person_id WHERE o.observation_source_value LIKE 'HP:%' GROUP BY p.person_id HAVING COUNT(DISTINCT o.observation_source_value) >= 2) AS subquery",
+    "columns": [
+      "count"
+    ],
+    "results": [
+      {
+        "count": 7
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (NO)",
+    "question": "How many patients are diagnosed with type 2 diabetes mellitus?",
+    "sql": "SELECT COUNT(DISTINCT p.person_id) FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (201826, 670802, 1409150, 1567956, 37082034, 37614313, 42485992, 45420114, 45420119, 45571656)",
+    "columns": [
+      "count"
+    ],
+    "results": [
+      {
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (YES)",
+    "question": "How many patients are diagnosed with type 2 diabetes mellitus?",
+    "sql": "SELECT COUNT(DISTINCT co.person_id) AS patient_count FROM cdm.condition_occurrence AS co WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (201826))",
+    "columns": [
+      "patient_count"
+    ],
+    "results": [
+      {
+        "patient_count": 3
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "Show me patients with diabetes mellitus (NO)",
+    "question": "Show me patients with diabetes mellitus ",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id = 201820",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": []
+  },
+  {
+    "id": 14,
+    "title": "Show me patients with diabetes mellitus (YES)",
+    "question": "Show me patients with diabetes mellitus ",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (201820))",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": [
+      {
+        "person_id": 900001,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1981,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "OMOP_SUBCLASS_TEST_1",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 900002,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1982,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "OMOP_SUBCLASS_TEST_2",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 900003,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1983,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "OMOP_SUBCLASS_TEST_3",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Show me patients with a neurological disease (YES)",
+    "question": "Show me patients with a neurological disease",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (376337, 37160844, 4087604, 45931778, 687530, 45499679))",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": [
+      {
+        "person_id": 3,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2012,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case4_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 15,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2019,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case6_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 18,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2013,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case1_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "title": null,
+    "question": "What more specific conditions of epilepsy are present in the OMOP vocabulary?",
+    "sql": "SELECT c2.concept_id, c2.concept_name, c2.vocabulary_id, c2.domain_id, c2.standard_concept FROM cdm.concept AS c1 JOIN cdm.concept_ancestor AS ca ON c1.concept_id = ca.ancestor_concept_id JOIN cdm.concept AS c2 ON ca.descendant_concept_id = c2.concept_id WHERE c1.concept_id = 380378 AND ca.min_levels_of_separation > 0 AND c2.invalid_reason IS NULL",
+    "columns": [
+      "concept_id",
+      "concept_name",
+      "vocabulary_id",
+      "domain_id",
+      "standard_concept"
+    ],
+    "results": [
+      {
+        "concept_id": 37206121,
+        "concept_name": "Hyperekplexia epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166922,
+        "concept_name": "Epilepsy due to congenital anomaly of brain",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674914,
+        "concept_name": "Autosomal recessive cerebellar ataxia, epilepsy, intellectual disability syndrome due to WWOX deficiency",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4041672,
+        "concept_name": "Rasmussen syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35607997,
+        "concept_name": "Action myoclonus renal failure syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37161495,
+        "concept_name": "Neonatal epilepsy due to perinatal stroke",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4147501,
+        "concept_name": "Progressive myoclonic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37161409,
+        "concept_name": "Severe neurodevelopmental disorder with feeding difficulties, stereotypic hand movement, bilateral cataract",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166920,
+        "concept_name": "Epilepsy due to congenital infectious disease",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36680599,
+        "concept_name": "Myoclonic epilepsy in non-progressive encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204217,
+        "concept_name": "Diffuse cerebral and cerebellar atrophy, intractable seizures, progressive microcephaly syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 762730,
+        "concept_name": "Lennox-Gastaut syndrome, non-refractory",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36676587,
+        "concept_name": "Partial corpus callosum agenesis, cerebellar vermis hypoplasia with posterior fossa cysts syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 45773528,
+        "concept_name": "Progressive myoclonus epilepsy with ataxia",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472228,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 4",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472265,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 3",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470342,
+        "concept_name": "Developmental and epileptic encephalopathy with spike-and-wave activation in sleep",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470337,
+        "concept_name": "Infantile epileptic spasms syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110163,
+        "concept_name": "Infant epilepsy with migrant focal crisis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1340323,
+        "concept_name": "Exacerbation of epilepsy",
+        "vocabulary_id": "OMOP Extension",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37116354,
+        "concept_name": "Epilepsy, microcephaly, skeletal dysplasia syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043551,
+        "concept_name": "Epilepsy with continuous spike wave during slow-wave sleep",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046207,
+        "concept_name": "Occipital lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37205088,
+        "concept_name": "Familial epilepsy with auditory features",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043408,
+        "concept_name": "Lateral temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44789005,
+        "concept_name": "Simple partial epileptic seizure",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37116386,
+        "concept_name": "Early-onset Lafora body disease",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044227,
+        "concept_name": "Myoclonic epilepsy with ragged red fibers",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046210,
+        "concept_name": "Juvenile absence epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166919,
+        "concept_name": "Epilepsy due to perinatal cerebral ischemia",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166811,
+        "concept_name": "Combined focal and generalized epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37162794,
+        "concept_name": "Lethal neonatal spasticity, epileptic encephalopathy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470340,
+        "concept_name": "Early-infantile developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4316060,
+        "concept_name": "Reflex epilepsy with photic stimulation-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36675122,
+        "concept_name": "Autism epilepsy syndrome due to branched chain ketoacid dehydrogenase kinase deficiency",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622969,
+        "concept_name": "Reflex epilepsy with sound-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4033911,
+        "concept_name": "Amelocerebrohypohidrotic syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 42535907,
+        "concept_name": "Pyridoxine-dependent developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35608023,
+        "concept_name": "Familial focal epilepsy with variable foci",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37165096,
+        "concept_name": "Self-limited familial infantile epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37395921,
+        "concept_name": "ICCA syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622254,
+        "concept_name": "Reflex epilepsy with thinking-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37119155,
+        "concept_name": "Epilepsy due to perinatal anoxic-ischemic brain injury",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044081,
+        "concept_name": "Childhood occipital visual epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35623412,
+        "concept_name": "Benign infantile seizure with mild gastroenteritis syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166918,
+        "concept_name": "Epilepsy due to perinatal periventricular hemorrhage",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37395845,
+        "concept_name": "Benign focal seizure of adolescence",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36680579,
+        "concept_name": "KCNQ2 developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047897,
+        "concept_name": "Epilepsy with generalized tonic-clonic seizures alone",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110783,
+        "concept_name": "X-linked spasticity, intellectual disability, epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 45771339,
+        "concept_name": "Northern epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4101744,
+        "concept_name": "Reflex epilepsy with visual stimulation-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204403,
+        "concept_name": "Progressive myoclonic epilepsy type 5",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472229,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 8",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1075797,
+        "concept_name": "Epilepsy with auditory features",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 763039,
+        "concept_name": "Acquired epileptic aphasia, refractory",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36715417,
+        "concept_name": "DEND syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110524,
+        "concept_name": "Epilepsy due to intracranial neoplasm",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110329,
+        "concept_name": "Epilepsy due to infectious disease of central nervous system",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043409,
+        "concept_name": "Orbitofrontal frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674784,
+        "concept_name": "Benign occipital lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1245354,
+        "concept_name": "MTHFS-related developmental delay, microcephaly, short stature, epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37163906,
+        "concept_name": "RNF13-related severe early-onset epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204277,
+        "concept_name": "Primary microcephaly, epilepsy, permanent neonatal diabetes syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37471287,
+        "concept_name": "Reflex epilepsy with pattern-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36675141,
+        "concept_name": "Early-onset spastic ataxia, myoclonic epilepsy, neuropathy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472232,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 7",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4176652,
+        "concept_name": "Alcohol-induced epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674719,
+        "concept_name": "Infantile spasm and broad thumb syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4194366,
+        "concept_name": "Reflex epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674689,
+        "concept_name": "Familial mesial temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043556,
+        "concept_name": "Reflex epilepsy with toothbrushing-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110674,
+        "concept_name": "Epilepsy co-occurrent and due to mesial temporal sclerosis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37116355,
+        "concept_name": "Epilepsy telangiectasia syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1076149,
+        "concept_name": "Photosensitive occipital lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36676518,
+        "concept_name": "Infantile-onset mesial temporal lobe epilepsy with severe cognitive regression",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043411,
+        "concept_name": "Self-limited familial neonatal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37160879,
+        "concept_name": "Polyhydramnios, megalencephaly, symptomatic epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37164751,
+        "concept_name": "Rolandic epilepsy, paroxysmal exercise-induced dystonia, writer's cramp syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36680590,
+        "concept_name": "FASTKD2-related infantile mitochondrial encephalomyopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674712,
+        "concept_name": "GRIN2A developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166945,
+        "concept_name": "Genetic generalized epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37162298,
+        "concept_name": "Spastic paraplegia, severe developmental delay, epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37205067,
+        "concept_name": "Epilepsy of infancy with migrating focal seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 45766380,
+        "concept_name": "Spinal muscular atrophy with progressive myoclonic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470341,
+        "concept_name": "Epileptic encephalopathy with spike-and-wave activation in sleep",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37164081,
+        "concept_name": "Progressive myoclonic epilepsy type 9",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37471288,
+        "concept_name": "Reflex epilepsy with music-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37395981,
+        "concept_name": "Generalized epilepsy and paroxysmal dyskinesia syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 3657974,
+        "concept_name": "Scar epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622873,
+        "concept_name": "Rolandic epilepsy, speech dyspraxia syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622175,
+        "concept_name": "Reflex epilepsy with hot water-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4185733,
+        "concept_name": "Self-limited epilepsy with centrotemporal spikes",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043405,
+        "concept_name": "Self-limited epilepsy with autonomic seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047888,
+        "concept_name": "Frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4048424,
+        "concept_name": "Self-limited focal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37163909,
+        "concept_name": "Neonatal epileptic encephalopathy due to glutaminase deficiency",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044226,
+        "concept_name": "Unverricht-Lundborg syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36716897,
+        "concept_name": "Epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37161434,
+        "concept_name": "Maternal epilepsy due to perinatal stroke",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470903,
+        "concept_name": "Mesomelic dysplasia, digital anomalies, intellectual disability syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472166,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 1",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 3655285,
+        "concept_name": "Epilepsy due to neonatal central nervous system infection",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043554,
+        "concept_name": "Drug-induced epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 374915,
+        "concept_name": "Focal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110522,
+        "concept_name": "Epilepsy due to cerebrovascular accident",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37174273,
+        "concept_name": "Early infantile developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166921,
+        "concept_name": "Epilepsy due to glucose transporter protein type 1 deficiency syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622037,
+        "concept_name": "Progressive myoclonic epilepsy with dystonia",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622869,
+        "concept_name": "Focal epilepsy, intellectual disability, cerebro-cerebellar malformation syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37399364,
+        "concept_name": "Folinic acid responsive developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35625621,
+        "concept_name": "STXBP1 developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4213017,
+        "concept_name": "Visual epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674783,
+        "concept_name": "Benign infantile focal epilepsy with midline spikes and waves during sleep",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110676,
+        "concept_name": "Epilepsy co-occurrent and due to demyelinating disorder",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 45757050,
+        "concept_name": "Epilepsy in mother complicating pregnancy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110349,
+        "concept_name": "P5PD developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1448874,
+        "concept_name": "Insular epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36716394,
+        "concept_name": "Celiac disease with epilepsy and cerebral calcification syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1075796,
+        "concept_name": "Self-limited infantile epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4104856,
+        "concept_name": "Mesiobasal limbic temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043410,
+        "concept_name": "Opercular frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36676621,
+        "concept_name": "Early-onset epileptic encephalopathy, cortical blindness, intellectual disability, facial dysmorphism syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37396462,
+        "concept_name": "Epilepsy with eyelid myoclonia",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204476,
+        "concept_name": "Progressive myoclonic epilepsy type 8",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37161435,
+        "concept_name": "Fetal epilepsy due to perinatal stroke",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043550,
+        "concept_name": "Dravet syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37160937,
+        "concept_name": "Early-onset progressive diffuse brain atrophy, microcephaly, muscle weakness, optic atrophy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37164436,
+        "concept_name": "CNTNAP2-related developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37160838,
+        "concept_name": "Epilepsy due to parasitic disease",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37168142,
+        "concept_name": "Developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37163903,
+        "concept_name": "SYNGAP1-related developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 3655276,
+        "concept_name": "Epilepsy due to infectious meningitis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4055361,
+        "concept_name": "Generalized epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110677,
+        "concept_name": "Epilepsy co-occurrent and due to dementia",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047904,
+        "concept_name": "Reflex epilepsy with writing-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046221,
+        "concept_name": "Reflex epilepsy with eating-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046219,
+        "concept_name": "Landau-Kleffner syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36676588,
+        "concept_name": "Autosomal recessive cerebellar ataxia, epilepsy, intellectual disability syndrome due to TUD deficiency",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35623629,
+        "concept_name": "Acute encephalopathy with biphasic seizures and late reduced diffusion",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35624201,
+        "concept_name": "Perioral myoclonia with absences",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204833,
+        "concept_name": "Familial temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044084,
+        "concept_name": "Supplementary motor cortex frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37161015,
+        "concept_name": "Combined oxidative phosphorylation defect type 27",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44784593,
+        "concept_name": "Post infectious grand mal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37162231,
+        "concept_name": "Early-onset seizures, distal limb anomalies, facial dysmorphism, global developmental delay syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4179936,
+        "concept_name": "Childhood absence epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36676367,
+        "concept_name": "CDKL5 developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37118973,
+        "concept_name": "Severe intellectual disability, epilepsy, anal anomaly, distal phalangeal hypoplasia syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37018608,
+        "concept_name": "Epileptic dementia with behavioral disturbance",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622261,
+        "concept_name": "Reflex epilepsy with startle-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44784595,
+        "concept_name": "Post-cerebrovascular accident epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047889,
+        "concept_name": "Cingulate frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674804,
+        "concept_name": "Mesial temporal lobe epilepsy with hippocampal sclerosis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046206,
+        "concept_name": "Parietal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047890,
+        "concept_name": "Dorsolateral frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37164546,
+        "concept_name": "Self-limited familial neonatal-infantile epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37111648,
+        "concept_name": "Epileptic encephalopathy with global cerebral demyelination",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37163197,
+        "concept_name": "Multiple mitochondrial dysfunctions syndrome type 2",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37165108,
+        "concept_name": "Fatty acyl-CoA reductase 1 deficiency",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36680607,
+        "concept_name": "Cryptogenic late-onset epileptic spasms",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36675181,
+        "concept_name": "Solute carrier family 35 member A2 congenital disorder of glycosylation",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 763040,
+        "concept_name": "Rasmussen syndrome, refractory",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37203831,
+        "concept_name": "Progressive myoclonic epilepsy type 6",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37472165,
+        "concept_name": "Neuronal ceroid lipofuscinosis type 2",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1448885,
+        "concept_name": "Mesial temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044222,
+        "concept_name": "Hemiconvulsion-hemiplegia-epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37396778,
+        "concept_name": "PCDH19 clustering epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44783830,
+        "concept_name": "Familial sleep-related hypermotor epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4101742,
+        "concept_name": "Myoclonic epilepsy in infancy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 763526,
+        "concept_name": "Autosomal dominant nocturnal frontal lobe epilepsy, refractory",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4244383,
+        "concept_name": "Self-limited neonatal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44801879,
+        "concept_name": "Petit-mal epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046213,
+        "concept_name": "Lennox-Gastaut syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 762729,
+        "concept_name": "Lennox-Gastaut syndrome, refractory",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37397175,
+        "concept_name": "Familial adult myoclonic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37160840,
+        "concept_name": "Epilepsy due to bacterial endocarditis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674269,
+        "concept_name": "Infantile epileptic dyskinetic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36674383,
+        "concept_name": "Multiple congenital anomalies, hypotonia, seizures syndrome type 2",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044225,
+        "concept_name": "Epilepsy with myoclonic absence",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37165066,
+        "concept_name": "CAD-CDG - carbamoyl-phosphate synthetase 2, aspartate transcarbamylase, and dihydroorotase congenital disorder of glycosylation",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622929,
+        "concept_name": "SCN8A developmental and epileptic encephalopathy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043414,
+        "concept_name": "Early infantile epileptic encephalopathy with suppression bursts",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622368,
+        "concept_name": "Reflex epilepsy with orgasm-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35622355,
+        "concept_name": "Reflex epilepsy with micturition-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37397174,
+        "concept_name": "X-linked epilepsy with learning disability and behavior disorder syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4326435,
+        "concept_name": "Post-traumatic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 764684,
+        "concept_name": "Temporal lobe epilepsy with mesial temporal sclerosis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110673,
+        "concept_name": "Epilepsy co-occurrent and due to degenerative brain disorder",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37116742,
+        "concept_name": "Autism spectrum disorder, epilepsy, arthrogryposis syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36675039,
+        "concept_name": "Severe neonatal onset encephalopathy with microcephaly",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204238,
+        "concept_name": "Congenital muscular dystrophy with intellectual disability and severe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37166917,
+        "concept_name": "Epilepsy due to perinatal intraventricular hemorrhage",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4267274,
+        "concept_name": "Juvenile myoclonic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4046214,
+        "concept_name": "Lafora disease",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37163334,
+        "concept_name": "Progressive myoclonic epilepsy type 7",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110888,
+        "concept_name": "Febrile infection-related epilepsy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 36715051,
+        "concept_name": "Atherosclerosis, deafness, diabetes, epilepsy, nephropathy syndrome",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 45757114,
+        "concept_name": "Epilepsy in mother complicating childbirth",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044083,
+        "concept_name": "Amygdalo-hippocampal temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044220,
+        "concept_name": "Anterior frontopolar frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4147503,
+        "concept_name": "Primary motor cortex frontal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 35624272,
+        "concept_name": "Gelastic seizures with hypothalamic hamartoma",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37204409,
+        "concept_name": "Progressive myoclonic epilepsy type 3",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043413,
+        "concept_name": "Epilepsy with myoclonic-atonic seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37205064,
+        "concept_name": "Familial infantile myoclonic epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4274575,
+        "concept_name": "Idiopathic generalized epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37470336,
+        "concept_name": "Epilepsy syndrome with progressive neurological deterioration",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4047903,
+        "concept_name": "Menstrual epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37312387,
+        "concept_name": "Alopecia, epilepsy, intellectual disability syndrome Moynahan type",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 44783583,
+        "concept_name": "Genetic epilepsy with febrile seizures plus",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 3655274,
+        "concept_name": "Epilepsy due to infectious encephalitis",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 37110675,
+        "concept_name": "Epilepsy due to immune disorder",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4043406,
+        "concept_name": "Epilepsy with reading-induced seizures",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 1075798,
+        "concept_name": "Sleep-related hypermotor epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4102345,
+        "concept_name": "Temporal lobe epilepsy",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      },
+      {
+        "concept_id": 4044079,
+        "concept_name": "Benign atypical partial epilepsy in childhood",
+        "vocabulary_id": "SNOMED",
+        "domain_id": "Condition",
+        "standard_concept": "S"
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "title": null,
+    "question": "Show me patients with the HPO phenotype HP:0000467 and without any stop_gained variants, regardless of gene.",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.observation AS o ON p.person_id = o.person_id WHERE o.observation_source_value = 'HP:0000467' AND NOT EXISTS(SELECT 1 FROM cdm.specimen AS s JOIN cdm.variant_occurrence AS vo ON s.specimen_id = vo.specimen_id JOIN cdm.variant_annotation AS va ON vo.variant_occurrence_id = va.variant_occurrence_id WHERE s.person_id = p.person_id AND va.annotation_field = 'vep_consequence' AND va.value_as_string = 'stop_gained')",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": []
+  },
+  {
+    "id": 18,
+    "title": null,
+    "question": "Show me all stop_gained variants for patients with the HPO phenotype HP:0000467, including patient ID, variant ID, gene symbol and VEP consequence.",
+    "sql": "SELECT p.person_id, vo.variant_occurrence_id, tg.hgnc_symbol AS gene_symbol, va.value_as_string AS vep_consequence FROM cdm.person AS p JOIN cdm.observation AS o ON p.person_id = o.person_id JOIN cdm.specimen AS s ON p.person_id = s.person_id JOIN cdm.variant_occurrence AS vo ON s.specimen_id = vo.specimen_id JOIN cdm.target_gene AS tg ON (vo.target_gene1_id = tg.target_gene_id OR vo.target_gene2_id = tg.target_gene_id) JOIN cdm.variant_annotation AS va ON vo.variant_occurrence_id = va.variant_occurrence_id WHERE o.observation_source_value = 'HP:0000467' AND va.annotation_field = 'vep_consequence' AND va.value_as_string = 'stop_gained'",
+    "columns": [
+      "person_id",
+      "variant_occurrence_id",
+      "gene_symbol",
+      "vep_consequence"
+    ],
+    "results": [
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3167653,
+        "gene_symbol": "C17orf107",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3174005,
+        "gene_symbol": "SLC35G6",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3194353,
+        "gene_symbol": "CDRT15",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3237535,
+        "gene_symbol": "NPEPPSP1",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3288007,
+        "gene_symbol": "NACA2",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 18,
+        "variant_occurrence_id": 3321375,
+        "gene_symbol": "ZACN",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2610967,
+        "gene_symbol": "C17orf107",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2617319,
+        "gene_symbol": "SLC35G6",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2637667,
+        "gene_symbol": "CDRT15",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2680849,
+        "gene_symbol": "NPEPPSP1",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2731321,
+        "gene_symbol": "NACA2",
+        "vep_consequence": "stop_gained"
+      },
+      {
+        "person_id": 15,
+        "variant_occurrence_id": 2764689,
+        "gene_symbol": "ZACN",
+        "vep_consequence": "stop_gained"
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "title": null,
+    "question": "Show me patients with the stop_gained variant in the CDRT15 gene, sorted by patient identifier.",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.specimen AS s ON p.person_id = s.person_id JOIN cdm.variant_occurrence AS vo ON s.specimen_id = vo.specimen_id JOIN cdm.target_gene AS tg ON (vo.target_gene1_id = tg.target_gene_id OR vo.target_gene2_id = tg.target_gene_id) JOIN cdm.variant_annotation AS va ON vo.variant_occurrence_id = va.variant_occurrence_id WHERE tg.hgnc_symbol = 'CDRT15' AND va.annotation_field = 'vep_consequence' AND va.value_as_string = 'stop_gained' ORDER BY p.person_id",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": [
+      {
+        "person_id": 1,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case1_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 2,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case1_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 3,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2012,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case4_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 4,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1980,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case2_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 5,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case2_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 6,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case2_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 7,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2002,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case3_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 8,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case3_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 9,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case3_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 10,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case4_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 11,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case4_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 12,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1982,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case5_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 13,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case5_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 14,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1970,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case5_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 15,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2019,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case6_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 16,
+        "gender_concept_id": 8507,
+        "year_of_birth": 1987,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case6_father",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 17,
+        "gender_concept_id": 8532,
+        "year_of_birth": 1986,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case6_mother",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      },
+      {
+        "person_id": 18,
+        "gender_concept_id": 8507,
+        "year_of_birth": 2013,
+        "month_of_birth": null,
+        "day_of_birth": null,
+        "birth_datetime": null,
+        "race_concept_id": 0,
+        "ethnicity_concept_id": 0,
+        "location_id": null,
+        "provider_id": null,
+        "care_site_id": null,
+        "person_source_value": "case1_index",
+        "gender_source_value": null,
+        "gender_source_concept_id": null,
+        "race_source_value": null,
+        "race_source_concept_id": null,
+        "ethnicity_source_value": null,
+        "ethnicity_source_concept_id": null
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "title": null,
+    "question": "Show me the stop-gained variants of the CDRT15 gene and, if available, the corresponding HGVS description.",
+    "sql": "SELECT vo.variant_occurrence_id, vo.hgvs_c, vo.hgvs_p, va.annotation_field, va.value_as_string AS annotation_value FROM cdm.variant_occurrence AS vo JOIN cdm.target_gene AS tg ON (vo.target_gene1_id = tg.target_gene_id OR vo.target_gene2_id = tg.target_gene_id) JOIN cdm.variant_annotation AS va ON vo.variant_occurrence_id = va.variant_occurrence_id WHERE tg.hgnc_symbol = 'CDRT15' AND va.annotation_field = 'vep_consequence' AND va.value_as_string = 'stop_gained'",
+    "columns": [
+      "variant_occurrence_id",
+      "hgvs_c",
+      "hgvs_p",
+      "annotation_field",
+      "annotation_value"
+    ],
+    "results": [
+      {
+        "variant_occurrence_id": 40684,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 228718,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 596845,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 971328,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 1710742,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 2080979,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 783294,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 1339980,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 1898776,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 3012150,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 3194353,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 410921,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 1153531,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 1528014,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 2264459,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 2447188,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 2637667,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      },
+      {
+        "variant_occurrence_id": 2824116,
+        "hgvs_c": "c.C70T",
+        "hgvs_p": "p.R24X",
+        "annotation_field": "vep_consequence",
+        "annotation_value": "stop_gained"
+      }
+    ]
+  }
+]
