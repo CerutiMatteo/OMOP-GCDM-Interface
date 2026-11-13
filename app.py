@@ -91,6 +91,18 @@ st.markdown("""
         border-color: #B71C1C !important;
         color: #FFFFFF !important;
     }
+    
+    .st-key-delete_history_button button {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+    }
+    
+    .st-key-delete_history_button button:hover {
+        background-color: #b02a37 !important;
+        border-color: #b02a37 !important;
+        color: white !important;
+    }
 
     /* Keep confirmation button text and icon white */
     .st-key-confirm_delete_single_query button p,
@@ -329,22 +341,38 @@ def connect_db():
         options="-c default_transaction_read_only=on"
     )
 
-def is_table_list_request(question: str) -> bool:
-    question = question.lower().strip().rstrip("?.")
 
-    supported_questions = {
-        "which omop model tables are available for queries",
-        "which tables are available for queries",
-        "what tables are available",
-        "list available tables",
-        "show available tables",
-        "quali tabelle sono disponibili",
-        "quali tabelle posso interrogare",
-        "mostrami le tabelle disponibili",
-        "elenca le tabelle disponibili",
+def is_table_list_request(question: str) -> bool:
+    import re
+
+    normalized = re.sub(r"[^\w\s]", " ", question.casefold())
+    words = set(normalized.split())
+
+    table_words = {"table", "tables", "tabella", "tabelle"}
+
+    list_words = {
+        "which", "what", "list", "show", "display",
+        "available", "allowed", "authorized", "authorised",
+        "accessible", "queryable", "can",
+        "quali", "quale", "elenca", "elencami",
+        "mostra", "mostrami", "dimmi",
+        "disponibili", "autorizzate", "autorizzati",
+        "consentite", "permesse", "posso",
+        "interrogare", "vedere"
     }
 
-    return question in supported_questions
+    return bool(words & table_words) and bool(words & list_words)
+
+
+def subclasses_title(question: str, choice) -> str:
+    if choice is None:
+        return question
+
+    return (
+        f"{question} "
+        f"(Subclasses: {'YES' if choice else 'NO'})"
+    )
+
 
 ##############################################################################################
 
@@ -375,7 +403,27 @@ if page == "💬 Query Interface":
     with col_button:
         generate_clicked = st.button("Generate Query", icon=":material/send:", use_container_width=True)
 
+    table_result_placeholder = st.empty()
+
+    if "available_tables_result" in st.session_state:
+        with table_result_placeholder.container():
+            available_tables = st.session_state["available_tables_result"]
+
+            st.subheader("Available OMOP Tables")
+
+            st.dataframe(
+                pd.DataFrame({"Table Name": available_tables}),
+                hide_index=True,
+                width="stretch"
+            )
+
+            st.info(
+                f"{len(available_tables)} tables are available for querying."
+            )
+
     if generate_clicked:
+
+        st.session_state.pop("available_tables_result", None)
 
         # Collapse previous results when generating a new query.
         st.session_state["collapse_history"] = True
@@ -401,22 +449,13 @@ if page == "💬 Query Interface":
                     if table_name in allowed_tables
                 )
 
-                st.subheader("Available OMOP Tables")
+                st.session_state["available_tables_result"] = available_tables
 
-                st.dataframe(
-                    pd.DataFrame(
-                        {"Table Name": available_tables}
-                    ),
-                    hide_index=True,
-                    width="stretch"
-                )
+                st.session_state.pop("generated_sql", None)
+                st.session_state.pop("generated_question", None)
+                st.session_state.pop("editable_sql", None)
 
-                st.info(
-                    f"{len(available_tables)} tables are available "
-                    "for querying."
-                )
-
-                st.stop()
+                st.rerun()
 
             with st.spinner("Generating SQL query..."):
                 try:
@@ -452,26 +491,28 @@ if page == "💬 Query Interface":
                         # of Programmer Mode.
                         st.session_state["subclasses_confirmed"] = not bool(clinical_conditions)
                         st.session_state["include_descendants"] = False
+                        st.session_state["subclasses_decision"] = None
 
                         # Render the next step after generation.
                         st.rerun()
 
                 except Exception as e:
-                    # Clear the overload message after failure.
+
                     retry_message.empty()
+
                     st.session_state.pop("generated_sql", None)
+
                     error_message = str(e).lower()
-                    if (
-                            "503" in error_message
-                            or "unavailable" in error_message
-                            or "high demand" in error_message
-                            or "resource_exhausted" in error_message
-                            or "429" in error_message
-                    ):
-                        st.warning("The AI model used to convert natural language into SQL is currently experiencing high demand. Please wait a moment and try again.")
+
+                    # Keep technical details in server logs.
+
+                    if any(code in error_message for code in ("503", "unavailable", "high demand", "resource_exhausted", "429")):
+                        st.warning("The AI model is currently experiencing high demand. Please wait a moment and try again.")
+                    elif ("only select queries are allowed" in error_message or "cannot_generate_sql" in error_message):
+                        st.error("This request cannot be processed. The interface only supports read-only SQL queries "
+                            "for retrieving clinical and genomic data. Requests outside these capabilities are not supported.")
                     else:
-                        st.error("An unexpected error occurred while generating the SQL query.")
-                        st.exception(e)
+                        st.error("Unable to generate a valid SQL query. Please check your request and try again.")
 
         else:
             st.warning("Please enter a question.")
@@ -502,6 +543,7 @@ if page == "💬 Query Interface":
             ):
                 try:
                     enabled = st.session_state["subclasses_choice"]
+                    st.session_state["subclasses_decision"] = enabled
 
                     updated_sql = set_include_descendants(
                         st.session_state["editable_sql"],
@@ -543,8 +585,12 @@ if page == "💬 Query Interface":
                     st.session_state["query_history"].append({
                         "id": query_id,
                         "question": st.session_state["generated_question"],
+                        "title": subclasses_title(
+                            st.session_state["generated_question"],
+                            st.session_state.get("subclasses_decision")
+                        ),
                         "sql": sql,
-                        "results": df.copy(),
+                        "results": df.copy()
                     })
 
                     save_history(st.session_state["query_history"])
@@ -555,6 +601,7 @@ if page == "💬 Query Interface":
                     st.session_state.pop("editable_sql", None)
                     st.session_state.pop("subclasses_confirmed", None)
                     st.session_state.pop("include_descendants", None)
+                    st.session_state.pop("subclasses_decision", None)
 
                     st.session_state["collapse_history"] = False
                     st.session_state["history_version"] = (
@@ -686,6 +733,10 @@ if page == "💬 Query Interface":
                     st.session_state["query_history"].append({
                         "id": query_id,
                         "question": st.session_state["generated_question"],
+                        "title": subclasses_title(
+                            st.session_state["generated_question"],
+                            st.session_state.get("subclasses_decision")
+                        ),
                         "sql": sql,
                         "results": df.copy()
                     })
@@ -700,6 +751,7 @@ if page == "💬 Query Interface":
                     st.session_state.pop("editable_sql", None)
                     st.session_state.pop("subclasses_confirmed", None)
                     st.session_state.pop("include_descendants", None)
+                    st.session_state.pop("subclasses_decision", None)
 
                     # Expand the latest result after successful execution.
                     st.session_state["collapse_history"] = False
@@ -834,7 +886,13 @@ if page == "💬 Query Interface":
                 st.rerun()
 
         with col_confirm:
-            if st.button("Delete History", icon=":material/delete_outline:", type="primary", use_container_width=True):
+            if st.button(
+                    "Delete History",
+                    icon=":material/delete_outline:",
+                    type="primary",
+                    use_container_width=True,
+                    key="delete_history_button"
+            ):
                 # Clear persistent history.
                 save_history([])
 

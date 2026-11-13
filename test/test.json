@@ -239,7 +239,7 @@
   },
   {
     "id": 7,
-    "title": "Show me the patients who have microcephaly. (NO)",
+    "title": "Show me the patients who have microcephaly. (Subclasses: NO)",
     "question": "Show me the patients who have microcephaly.",
     "sql": "SELECT DISTINCT p.* FROM cdm.person AS p WHERE p.person_id IN (SELECT co.person_id FROM cdm.condition_occurrence AS co WHERE co.condition_concept_id IN (606878, 606879) UNION SELECT o.person_id FROM cdm.observation AS o WHERE o.observation_concept_id = 37420814 OR o.observation_source_value = 'HP:0000252')",
     "columns": [
@@ -327,7 +327,7 @@
   },
   {
     "id": 11,
-    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (NO)",
+    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (Subclasses: NO)",
     "question": "How many patients are diagnosed with type 2 diabetes mellitus?",
     "sql": "SELECT COUNT(DISTINCT p.person_id) FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (201826, 670802, 1409150, 1567956, 37082034, 37614313, 42485992, 45420114, 45420119, 45571656)",
     "columns": [
@@ -341,7 +341,7 @@
   },
   {
     "id": 12,
-    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (YES)",
+    "title": "How many patients are diagnosed with type 2 diabetes mellitus? (Subclasses: YES)",
     "question": "How many patients are diagnosed with type 2 diabetes mellitus?",
     "sql": "SELECT COUNT(DISTINCT co.person_id) AS patient_count FROM cdm.condition_occurrence AS co WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (201826))",
     "columns": [
@@ -355,7 +355,7 @@
   },
   {
     "id": 13,
-    "title": "Show me patients with diabetes mellitus (NO)",
+    "title": "Show me patients with diabetes mellitus (Subclasses: NO)",
     "question": "Show me patients with diabetes mellitus ",
     "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id = 201820",
     "columns": [
@@ -382,7 +382,7 @@
   },
   {
     "id": 14,
-    "title": "Show me patients with diabetes mellitus (YES)",
+    "title": "Show me patients with diabetes mellitus (Subclasses: YES)",
     "question": "Show me patients with diabetes mellitus ",
     "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (201820))",
     "columns": [
@@ -459,94 +459,6 @@
         "provider_id": null,
         "care_site_id": null,
         "person_source_value": "OMOP_SUBCLASS_TEST_3",
-        "gender_source_value": null,
-        "gender_source_concept_id": null,
-        "race_source_value": null,
-        "race_source_concept_id": null,
-        "ethnicity_source_value": null,
-        "ethnicity_source_concept_id": null
-      }
-    ]
-  },
-  {
-    "id": 15,
-    "title": "Show me patients with a neurological disease (YES)",
-    "question": "Show me patients with a neurological disease",
-    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (SELECT descendant_concept_id FROM cdm.concept_ancestor WHERE ancestor_concept_id IN (376337, 37160844, 4087604, 45931778, 687530, 45499679))",
-    "columns": [
-      "person_id",
-      "gender_concept_id",
-      "year_of_birth",
-      "month_of_birth",
-      "day_of_birth",
-      "birth_datetime",
-      "race_concept_id",
-      "ethnicity_concept_id",
-      "location_id",
-      "provider_id",
-      "care_site_id",
-      "person_source_value",
-      "gender_source_value",
-      "gender_source_concept_id",
-      "race_source_value",
-      "race_source_concept_id",
-      "ethnicity_source_value",
-      "ethnicity_source_concept_id"
-    ],
-    "results": [
-      {
-        "person_id": 3,
-        "gender_concept_id": 8507,
-        "year_of_birth": 2012,
-        "month_of_birth": null,
-        "day_of_birth": null,
-        "birth_datetime": null,
-        "race_concept_id": 0,
-        "ethnicity_concept_id": 0,
-        "location_id": null,
-        "provider_id": null,
-        "care_site_id": null,
-        "person_source_value": "case4_index",
-        "gender_source_value": null,
-        "gender_source_concept_id": null,
-        "race_source_value": null,
-        "race_source_concept_id": null,
-        "ethnicity_source_value": null,
-        "ethnicity_source_concept_id": null
-      },
-      {
-        "person_id": 15,
-        "gender_concept_id": 8507,
-        "year_of_birth": 2019,
-        "month_of_birth": null,
-        "day_of_birth": null,
-        "birth_datetime": null,
-        "race_concept_id": 0,
-        "ethnicity_concept_id": 0,
-        "location_id": null,
-        "provider_id": null,
-        "care_site_id": null,
-        "person_source_value": "case6_index",
-        "gender_source_value": null,
-        "gender_source_concept_id": null,
-        "race_source_value": null,
-        "race_source_concept_id": null,
-        "ethnicity_source_value": null,
-        "ethnicity_source_concept_id": null
-      },
-      {
-        "person_id": 18,
-        "gender_concept_id": 8507,
-        "year_of_birth": 2013,
-        "month_of_birth": null,
-        "day_of_birth": null,
-        "birth_datetime": null,
-        "race_concept_id": 0,
-        "ethnicity_concept_id": 0,
-        "location_id": null,
-        "provider_id": null,
-        "care_site_id": null,
-        "person_source_value": "case1_index",
         "gender_source_value": null,
         "gender_source_concept_id": null,
         "race_source_value": null,
@@ -2731,5 +2643,32 @@
         "annotation_value": "stop_gained"
       }
     ]
+  },
+  {
+    "id": 24,
+    "title": "Show me patients with a neurological disease (Subclasses: NO)",
+    "question": "Show me patients with a neurological disease",
+    "sql": "SELECT DISTINCT p.* FROM cdm.person AS p JOIN cdm.condition_occurrence AS co ON p.person_id = co.person_id WHERE co.condition_concept_id IN (376337, 37160844, 4087604, 45931778, 687530, 45499679)",
+    "columns": [
+      "person_id",
+      "gender_concept_id",
+      "year_of_birth",
+      "month_of_birth",
+      "day_of_birth",
+      "birth_datetime",
+      "race_concept_id",
+      "ethnicity_concept_id",
+      "location_id",
+      "provider_id",
+      "care_site_id",
+      "person_source_value",
+      "gender_source_value",
+      "gender_source_concept_id",
+      "race_source_value",
+      "race_source_concept_id",
+      "ethnicity_source_value",
+      "ethnicity_source_concept_id"
+    ],
+    "results": []
   }
 ]
