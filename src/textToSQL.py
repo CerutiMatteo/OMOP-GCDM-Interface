@@ -66,8 +66,7 @@ def generate_sql(question, on_retry=None):
 
     # STEP 1: Identify clinical terminology.
     extraction_prompt = f"""
-        You are a medical terminology assistant specialized
-        in the OMOP Common Data Model.
+        You are a medical terminology assistant specialized in the OMOP Common Data Model.
 
         Identify the clinical concepts mentioned in the user's question.
 
@@ -77,11 +76,9 @@ def generate_sql(question, on_retry=None):
         - Preserve the original clinical meaning.
         - Do not generalize or broaden the diagnosis.
         - Do not invent OMOP concept IDs.
-        - Do not extract generic database terms such as patient,
-          person, count, table, or record.
+        - Do not extract generic database terms such as patient, person, count, table, or record.
 
-        Return ONLY a valid JSON array containing the normalized
-        English clinical terms.
+        Return ONLY a valid JSON array containing the normalized English clinical terms.
 
         If no clinical concepts are present, return [].
 
@@ -179,9 +176,8 @@ def generate_sql(question, on_retry=None):
     The variant_occurrence table has two gene relationships:
     - target_gene1_id
     - target_gene2_id
-
-    Determine whether answering the user's question requires
-    considering both gene relationships.
+    
+    Determine whether answering the user's question requires considering both gene relationships.
 
     Return ONLY one of these JSON objects:
 
@@ -196,8 +192,7 @@ def generate_sql(question, on_retry=None):
 
     Return false when:
     - The question does not involve genomic gene relationships.
-    - The user explicitly restricts the search to target_gene1_id
-      or target_gene2_id.
+    - The user explicitly restricts the search to target_gene1_id or target_gene2_id.
 
     USER QUESTION:
     {question}
@@ -214,14 +209,9 @@ def generate_sql(question, on_retry=None):
         )
 
     except (json.JSONDecodeError, AttributeError):
-        raise ValueError(
-            "Unable to determine the required genomic gene scope."
-        )
+        raise ValueError("Unable to determine the required genomic gene scope.")
 
-    print(
-        "GENOMIC GENE SCOPE:",
-        require_both_genes
-    )
+    print("GENOMIC GENE SCOPE:", require_both_genes)
 
     # STEP 3: Generate SQL using schema and vocabulary context.
     prompt = f"""
@@ -231,15 +221,11 @@ def generate_sql(question, on_retry=None):
     
     The user's question may be written in Italian, English, or another language.
 
-    Interpret the question in its original language and
-    internally normalize its meaning into English before
-    generating SQL.
+    Interpret the question in its original language and internally normalize its meaning into English before generating SQL.
 
-    Use English OMOP terminology to identify the appropriate
-    database tables, columns, and clinical concepts.
+    Use English OMOP terminology to identify the appropriate database tables, columns, and clinical concepts.
 
-    Preserve the exact meaning of the original question,
-    including filters, quantities, dates, and clinical conditions.
+    Preserve the exact meaning of the original question, including filters, quantities, dates, and clinical conditions.
 
     Do not output the translated question. Return only the final SQL query.
 
@@ -247,41 +233,28 @@ def generate_sql(question, on_retry=None):
 
     DATABASE RELATIONSHIP AND JOIN RULES:
     
-    The database schema explicitly provides PRIMARY KEYS,
-    FOREIGN KEYS, and additional semantic relationships.
+    The database schema explicitly provides PRIMARY KEYS, FOREIGN KEYS, and additional semantic relationships.
     
-    When generating JOIN operations, always identify the
-    relationship between the tables before writing the ON clause.
+    When generating JOIN operations, always identify the relationship between the tables before writing the ON clause.
     
-    Prefer explicitly declared FOREIGN KEY relationships
-    over assumptions based on similar column names.
+    Prefer explicitly declared FOREIGN KEY relationships over assumptions based on similar column names.
     
     For every JOIN:
-    - Use the exact source and referenced columns defined
-      by the provided relationships.
-    - Do not assume that two columns are related simply
-      because their names are similar or both contain "id".
+    - Use the exact source and referenced columns defined by the provided relationships.
+    - Do not assume that two columns are related simply because their names are similar or both contain "id".
     - Do not join a foreign key to an unrelated primary key.
-    - Do not replace a foreign key column with the primary
-      key of its own table.
-    - Apply the same relationship rules inside subqueries,
-      EXISTS, NOT EXISTS, IN, and NOT IN expressions.
-    - If multiple relationships exist between two tables,
-      select the relationship that matches the user's question.
+    - Do not replace a foreign key column with the primary key of its own table.
+    - Apply the same relationship rules inside subqueries, EXISTS, NOT EXISTS, IN, and NOT IN expressions.
+    - If multiple relationships exist between two tables, select the relationship that matches the user's question.
     - If no relationship is available, do not invent one.
     
-    A valid SQL query is not necessarily a semantically
-    correct SQL query. All JOIN conditions must respect
-    the relationships provided in the database schema.
+    A valid SQL query is not necessarily a semantically correct SQL query. All JOIN conditions must respect the relationships provided in the database schema.
     
-    Do not invent tables, columns, or relationships.
-    Do not generate INSERT, UPDATE, DELETE, DROP,
-    or other modifying statements.
+    Do not invent tables, columns, or relationships. Do not generate INSERT, UPDATE, DELETE, DROP, or other modifying statements.
     
     GENOMIC GENE RELATIONSHIP RULES:
 
-    The variant_occurrence table contains two foreign keys
-    referencing target_gene:
+    The variant_occurrence table contains two foreign keys referencing target_gene:
     
     - variant_occurrence.target_gene1_id
     - variant_occurrence.target_gene2_id
@@ -299,16 +272,13 @@ def generate_sql(question, on_retry=None):
         OR vo.target_gene2_id = tg.target_gene_id
       )
     
-    Do not use only target_gene1_id unless the user's question
-    explicitly restricts the search to that relationship.
+    Do not use only target_gene1_id unless the user's question explicitly restricts the search to that relationship.
     
     Do not invent additional relationships.
     
     OMOP CONCEPT FILTERING RULES:
 
-    When filtering records by OMOP clinical or demographic concepts,
-    prefer comparisons using concept_id columns rather than
-    comparisons using concept_name or concept_code.
+    When filtering records by OMOP clinical or demographic concepts, prefer comparisons using concept_id columns rather than comparisons using concept_name or concept_code.
     For example:
     - person.gender_concept_id
     - person.race_concept_id
@@ -317,149 +287,97 @@ def generate_sql(question, on_retry=None):
     - condition_occurrence.condition_concept_id
     - measurement.measurement_concept_id
     
-    When a valid concept ID is available, use it directly in the appropriate concept_id column.
-    Avoid unnecessary JOIN operations with the concept table when the concept ID is already known.
-    Never invent concept IDs.
+    When a valid concept ID is available, use it directly in the appropriate concept_id column. Avoid unnecessary JOIN operations with the concept table when the concept ID is already known. Never invent concept IDs.
     
-    Use only concept IDs that are explicitly provided in the
-    OMOP vocabulary context or otherwise verified against
-    the database.
+    Use only concept IDs that are explicitly provided in the OMOP vocabulary context or otherwise verified against the database.
 
-    If the concept ID cannot be determined reliably,
-    do not guess it.
+    If the concept ID cannot be determined reliably, do not guess it.
 
-    JOIN the concept table when necessary for retrieving
-    concept metadata or answering questions about concepts.
+    JOIN the concept table when necessary for retrieving concept metadata or answering questions about concepts.
 
     Preserve the exact clinical meaning of the user's question.
     
     OMOP SCHEMA SEMANTICS:
 
-    In the OMOP Common Data Model, the person table
-    represents the individuals recorded in the database.
+    In the OMOP Common Data Model, the person table represents the individuals recorded in the database.
 
-    Natural-language terms such as "patient", "patients",
-    "paziente", "pazienti", "person" and "people"
-    generally refer to records in the person table.
+    Natural-language terms such as "patient", "patients", "paziente", "pazienti", "person" and "people" generally refer to records in the person table.
 
-    When the user asks to list or count patients,
-    use the person table, if available in the provided schema.
+    When the user asks to list or count patients, use the person table, if available in the provided schema.
 
-    When the user asks for patients with specific clinical
-    conditions, use the appropriate clinical event tables
-    and join them through person_id when necessary.
+    When the user asks for patients with specific clinical conditions, use the appropriate clinical event tables and join them through person_id when necessary.
 
-    Do not invent tables named patient or patients.
-    Always respect the provided database schema.
+    Do not invent tables named patient or patients. Always respect the provided database schema.
     
     HPO PHENOTYPE SEMANTICS:
 
-    Phenotypic features imported from Phenopackets are stored
-    in cdm.observation.
+    Phenotypic features imported from Phenopackets are stored in cdm.observation.
     
-    The original HPO identifier is stored in
-    observation.observation_source_value.
+    The original HPO identifier is stored in observation.observation_source_value.
     
-    HPO identifiers may appear as HP:0000467 in source data
-    and HP_0000467 in the OMOP vocabulary.
+    HPO identifiers may appear as HP:0000467 in source data and HP_0000467 in the OMOP vocabulary.
     
-    When the user specifies an exact HPO identifier,
-    filter observation.observation_source_value using the
-    original colon-separated identifier.
+    When the user specifies an exact HPO identifier, filter observation.observation_source_value using the original colon-separated identifier.
     
-    Do not assume that HPO vocabulary concepts are standard
-    OMOP concepts.
+    Do not assume that HPO vocabulary concepts are standard OMOP concepts.
     
-    Use observation.observation_concept_id only when its
-    relationship to the requested phenotype has been verified.
+    Use observation.observation_concept_id only when its relationship to the requested phenotype has been verified.
     
-    Do not use condition_occurrence for Phenopacket HPO
-    phenotypic features.
+    Do not use condition_occurrence for Phenopacket HPO phenotypic features.
     
     
     CLINICAL CONDITIONS AND PHENOTYPE DISAMBIGUATION:
     
-    Clinical diagnoses are stored in cdm.condition_occurrence.
-    Phenotypic features imported from Phenopackets are stored
-    in cdm.observation.
+    Clinical diagnoses are stored in cdm.condition_occurrence. Phenotypic features imported from Phenopackets are stored in cdm.observation.
     
-    When the user explicitly asks for a diagnosis or diagnosed
-    patients, prefer condition_occurrence.
+    When the user explicitly asks for a diagnosis or diagnosed patients, prefer condition_occurrence.
     
-    When the user explicitly asks for an HPO phenotype,
-    use observation and the appropriate HPO source identifier.
+    When the user explicitly asks for an HPO phenotype, use observation and the appropriate HPO source identifier.
     
-    Some clinical characteristics can be represented both
-    as diagnoses and as HPO phenotypes.
+    Some clinical characteristics can be represented both as diagnoses and as HPO phenotypes.
     
-    When the user asks for patients with such a characteristic
-    without specifying whether it is a diagnosis or a phenotype,
-    consider both representations if the relevant concepts
-    and identifiers can be reliably established.
+    When the user asks for patients with such a characteristic without specifying whether it is a diagnosis or a phenotype, consider both representations if the relevant concepts and identifiers can be reliably established.
     
-    Use OR or EXISTS to combine matching patients from
-    different representations without duplicating patients.
+    Use OR or EXISTS to combine matching patients from different representations without duplicating patients.
     
-    Never assume that a patient lacks a clinical characteristic
-    solely because it is absent from condition_occurrence.
+    Never assume that a patient lacks a clinical characteristic solely because it is absent from condition_occurrence.
     
-    Do not invent HPO identifiers or OMOP concept IDs.
-    Use only verified vocabulary identifiers and preserve
-    the clinical meaning of the requested characteristic.
+    Do not invent HPO identifiers or OMOP concept IDs. Use only verified vocabulary identifiers and preserve the clinical meaning of the requested characteristic.
 
     OMOP VOCABULARY CONTEXT:
     {vocabulary_context}
 
-    The vocabulary context contains candidate OMOP concepts
-    retrieved directly from the database.
+    The vocabulary context contains candidate OMOP concepts retrieved directly from the database.
 
-    Use the candidate concepts only when relevant to the question.
-
-    Consider the domain and standard_concept fields when
-    selecting concepts.
+    Use the candidate concepts only when relevant to the question. Consider the domain and standard_concept fields when selecting concepts.
 
     Never invent concept IDs.
     
-    The vocabulary context contains valid OMOP candidate concepts,
-    including standard and non-standard concepts.
+    The vocabulary context contains valid OMOP candidate concepts, including standard and non-standard concepts.
     
-    Some non-standard concepts may also have verified
-    "Maps to" relationships to standard concepts.
+    Some non-standard concepts may also have verified "Maps to" relationships to standard concepts.
     
-    Use the domain_id, standard_concept, and mapping_type
-    fields to determine how each concept should be used.
+    Use the domain_id, standard_concept, and mapping_type fields to determine how each concept should be used.
     
     VOCABULARY DISCOVERY RULES:
 
-    When the user asks which codes or concepts correspond
-    to a clinical term in a vocabulary, search the
-    concept table using the requested vocabulary and
-    the relevant clinical terminology.
+    When the user asks which codes or concepts correspond to a clinical term in a vocabulary, search the concept table using the requested vocabulary and the relevant clinical terminology.
     
-    Do not restrict vocabulary discovery queries only
-    to the concept IDs provided by the vocabulary resolver.
+    Do not restrict vocabulary discovery queries only to the concept IDs provided by the vocabulary resolver.
     
-    The vocabulary resolver provides candidate concepts
-    to support SQL generation, not an exhaustive list
-    of all matching vocabulary entries.
+    The vocabulary resolver provides candidate concepts to support SQL generation, not an exhaustive list of all matching vocabulary entries.
     
-    Use concept_name or concept_code filters when
-    discovering vocabulary concepts.
+    Use concept_name or concept_code filters when discovering vocabulary concepts.
     
-    Use concept_id filters when retrieving clinical
-    records associated with already resolved concepts.
+    Use concept_id filters when retrieving clinical records associated with already resolved concepts.
     
     CLINICAL CONCEPT SELECTION RULES:
 
-    The OMOP vocabulary context contains candidate concepts,
-    not necessarily concepts that should all be used.
+    The OMOP vocabulary context contains candidate concepts, not necessarily concepts that should all be used.
     
-    Select concept IDs based on their precise clinical meaning,
-    not merely on similarities between concept names.
+    Select concept IDs based on their precise clinical meaning, not merely on similarities between concept names.
     
-    When the user asks for patients affected by a disease,
-    select concepts that represent diagnoses or conditions
-    of the patients themselves.
+    When the user asks for patients affected by a disease, select concepts that represent diagnoses or conditions of the patients themselves.
     
     Do not include concepts representing:
     - Family history of a disease.
@@ -468,18 +386,13 @@ def generate_sql(question, on_retry=None):
     - Screening or preventive encounters.
     - Suspected or ruled-out diagnoses.
     
-    These concepts may be included only when the user
-    explicitly requests them.
+    These concepts may be included only when the user explicitly requests them.
     
-    For filters on condition_occurrence.condition_concept_id,
-    prefer valid standard concepts belonging to the
-    Condition domain.
+    For filters on condition_occurrence.condition_concept_id, prefer valid standard concepts belonging to the Condition domain.
     
-    Do not automatically include every concept returned
-    by the vocabulary resolver.
+    Do not automatically include every concept returned by the vocabulary resolver.
     
-    Preserve all clinically relevant concepts when multiple
-    concept IDs are necessary to represent the user's request.
+    Preserve all clinically relevant concepts when multiple concept IDs are necessary to represent the user's request.
     
     Use concept_ancestor only when a hierarchical search is appropriate and the selected ancestor is a valid standard concept.
 
@@ -491,8 +404,7 @@ def generate_sql(question, on_retry=None):
     USER QUESTION:
     {question}
 
-    Return only the SQL query, without explanations
-    or Markdown formatting.
+    Return only the SQL query, without explanations or Markdown formatting.
     """
 
     # Generate SQL and validate it before returning.
@@ -544,11 +456,9 @@ def generate_sql(question, on_retry=None):
 
             Generate a corrected PostgreSQL SELECT query.
 
-            Follow the provided database schema and its
-            declared FOREIGN KEY relationships exactly.
+            Follow the provided database schema and its declared FOREIGN KEY relationships exactly.
 
-            Fix the validation error without changing
-            the meaning of the original user question.
+            Fix the validation error without changing the meaning of the original user question.
 
             Return only the corrected SQL query.
             """
